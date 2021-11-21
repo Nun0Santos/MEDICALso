@@ -4,9 +4,6 @@
 #include "balcao.h"
 #include "utilis.h"
 
-
-
-
 int main() {
     char linha[100];
     int res,tam,exstat,balcaoToClassificador[2],ClassificadorToBalcao[2];
@@ -15,11 +12,14 @@ int main() {
     char *MaxClientes_str, *MaxMedicos_str;
     char resposta[30];
 
+    utente* ptrUtentes;
+    especialista* ptrEspecialistas;
+
     pipe(balcaoToClassificador);
     pipe(ClassificadorToBalcao);
 
-
     printf("PID = %d\n",getpid());
+
     MaxClientes_str = getenv("MAXCLIENTES");
     if (MaxClientes_str){
        MaxClientes = atoi(MaxClientes_str);
@@ -41,8 +41,6 @@ int main() {
 
     printf("MAXMEDICOS = %d\n",MaxMedicos);
 
-   utente* ptrUtentes;
-   especialista* ptrEspecialistas;
 
    ptrUtentes = malloc(sizeof(utente) * MaxClientes);
 
@@ -50,25 +48,12 @@ int main() {
        printf("Erro na alocacao dos utentes!\n");
        return -1;
    }
-
    ptrEspecialistas = malloc(sizeof(especialista) * MaxMedicos);
 
    if (ptrEspecialistas == NULL) {
        printf("Erro na alocacao dos medicos especialistas!\n");
        return -1;
    }
-   /*for (int i = 0; i < MaxClientes; i++) {
-       ptrUtentes[i].cliente_id = 1;
-       strcpy(ptrUtentes[i].nome, "Manel");
-       strcpy(ptrUtentes[i].sintoma, "Dor no peito");
-       printf("id: %d \t sintoma: %s \t nome: %s\n", ptrUtentes[i].cliente_id, ptrUtentes[i].sintoma, ptrUtentes[i].nome);
-   }*/
-    /*for (int i = 0; i < MaxMedicos; ++i) {
-        ptrEspecialistas[i].medico_id = 1;
-        strcpy(ptrEspecialistas[i].especialidade, "oftalmologia");
-        strcpy(ptrEspecialistas[i].nome,  "Alexandre");
-        printf("id: %d \t especialidade: %s \t  nome: %s\n", ptrEspecialistas[i].medico_id, ptrEspecialistas[i].especialidade, ptrEspecialistas[i].nome);
-    }*/
         res = fork();
         if (res == 0) {
             //printf("Sou o filho %d\n", getpid());
@@ -82,10 +67,9 @@ int main() {
             close(ClassificadorToBalcao[0]);
             close(ClassificadorToBalcao[1]);
 
-            execlp("./classificador","./classificador", NULL); //VER ESPACOS
+            execlp("./classificador","./classificador", NULL);
             fprintf(stderr, "Comando nao encontrado\n");
             exit(123);
-            return 3;
         }
         //pai aguarda pelo comando e depois continua
         close(balcaoToClassificador[0]);
@@ -106,7 +90,6 @@ int main() {
 }	
 
 // 1º - Verificar se já existe outro balcão a correr : (comando ps ax diz-me todos os processos que estão a decorrer)
-
 
 //2º - Interagir em SIMULTÂNEO com clientes, médicos e classificador :  (função execl permite-me executar um progrma)
 

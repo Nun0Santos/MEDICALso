@@ -10,7 +10,8 @@
 typedef struct especialistas{
     char nome[NOME_MAX];
     char especialidade[ESPECIALIDADE_MAX];
-    int medico_id; //PID do processo
+    int  medico_id; //PID do processo
+    int  cliente_id;
 }especialista;
 
 

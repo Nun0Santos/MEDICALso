@@ -6,10 +6,13 @@
 #include "medico.h"
 #include "cliente.h"
 #include "utilis.h"
+#define VAR_MAX 20
 
+typedef struct balcao{
+    int n_clientes;
+    int n_medicos;
+}balcao;
 
-
-//FUNÇÕES
 
      utente utentes (); //Lista os utentes em fila de ESPERA indicando qual a especialidade e qual a prioridade, e também os utentes atualmente a serem atendidos, em que especialidade e por qual especialista;
 
