@@ -1,25 +1,36 @@
+
 #include "cliente.h"
 #include "utilis.h"
+#include "balcao.h"
 
 
 
-int main(int argc, char nome[NOME_MAX]){
+int main(int argc, char *argv[]){
         utente a;
 
-        /*if(access(balcao_FIFO, F_OK) != 0){
+        //int fd_client_fifo; // file descriptors para os FIFOS
+        //char cli_fifo[32]; 				   //FIFO do Cliente
+        int c_fifo_fd;
+
+        if(access(bal_FIFO, F_OK) != 0){
         printf("O balcao nao esta a executar\n");
         exit(2);
-    }*/
+    }
         if( argc < 2){
             printf("Faltam argumentos!\n");
             return -1;
 
         }
 
+    /*======================FIFO do Cliente (aberto para leitura e escrita)===========================*/
+
+
+
+
         printf("Indique os seus sintomas: ");
-        scanf("%s",a.sintoma);
+        scanf("%s\n",a.sintoma);
         printf("Utente [PID] %d\n",getpid());
-         printf("%s",a.nome);
+
     return 0;
 }
 

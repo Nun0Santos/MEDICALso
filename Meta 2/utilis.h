@@ -11,12 +11,12 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 
-#define bal_FIFO "balcao_fifo"
-#define medico_FIFO "medico_fifo"
-//#define  MAIL_BALCAO test
+#define bal_FIFO "server_fifo"
+#define CLI_FIFO "client_fifo_%d"
+#define MEDICO_FIFO "medico_fifo_%d"
 
-//partilhar mail do balcao
 
 struct balcao{
     int id;

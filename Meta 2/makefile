@@ -1,13 +1,16 @@
-all: medico cliente balcao
+all: medico cliente balcao func_balcao.o
 
-balcao: balcao.c balcao.h utilis.h
-	gcc balcao.c -o balcao
+balcao: func_balcao.o
+	gcc balcao.c func_balcao.o -o balcao
 
-medico: medico.c medico.h utilis.h
+medico:
 	gcc medico.c -o medico
 
-cliente: cliente.c cliente.h utilis.h
+cliente:
 	gcc cliente.c -o cliente
 
+func_balcao.o: 
+	     gcc -c func_balcao.c -o func_balcao.o
+
 clean:
-	rm medico balcao cliente
+	rm medico balcao cliente func_balcao.o

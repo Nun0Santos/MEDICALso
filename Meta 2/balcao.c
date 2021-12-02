@@ -2,14 +2,14 @@
 // Created by user on 07/11/21.
 //
 #include "balcao.h"
+#include "func_balcao.h"
 #include "utilis.h"
 #include <fcntl.h>
 
 
-
 int main() {
     char linha[100]; // espaco alocado para escrita de comandos
-    int res,tam,exstat,balcaoToClassificador[2],ClassificadorToBalcao[2];
+     int res,tam,exstat,balcaoToClassificador[2],ClassificadorToBalcao[2];
 
     char *MaxClientes_str, *MaxMedicos_str; //Var ambiente
     int MaxClientes, MaxMedicos;
@@ -19,7 +19,7 @@ int main() {
     pipe(ClassificadorToBalcao); //Pipe retorno
 
     // VERIFICAR SE O BALCAO ESTA A CORRER
-    int fd_server_fifo,fd_client_fifo;
+    int fd_server_fifo,fd_cliente_fifo;
 
     if(access(bal_FIFO, F_OK) == 0){
         printf("Balcão já está  executar\n");
@@ -27,7 +27,7 @@ int main() {
     }
 
     mkfifo(bal_FIFO, 0600);
-    printf("Criei o FIFO bo balcão...\n");
+    printf("Criei o FIFO do balcão...\n");
 
     // abri o fifo
     fd_server_fifo = open(bal_FIFO,O_RDWR);
@@ -37,6 +37,7 @@ int main() {
         printf("Erro na Abertura\n");
         exit(2);
     }
+
     printf("PID = %d\n",getpid());
     MaxClientes_str = getenv("MAXCLIENTES");
     if (MaxClientes_str){
@@ -75,18 +76,7 @@ int main() {
        printf("Erro na alocacao dos medicos especialistas!\n");
        return -1;
    }
-   for (int i = 0; i < MaxClientes; i++) {
-       ptrUtentes[i].cliente_id = 1;
-       strcpy(ptrUtentes[i].nome, "Manel");
-       strcpy(ptrUtentes[i].sintoma, "Dor no peito");
-       printf("id: %d \t sintoma: %s \t nome: %s\n", ptrUtentes[i].cliente_id, ptrUtentes[i].sintoma, ptrUtentes[i].nome);
-   }
-    for (int i = 0; i < MaxMedicos; ++i) {
-        ptrEspecialistas[i].medico_id = 1;
-        strcpy(ptrEspecialistas[i].especialidade, "oftalmologia");
-        strcpy(ptrEspecialistas[i].nome,  "Alexandre");
-        printf("id: %d \t especialidade: %s \t  nome: %s\n", ptrEspecialistas[i].medico_id, ptrEspecialistas[i].especialidade, ptrEspecialistas[i].nome);
-    }
+
         res = fork();
         if (res == 0) { //filho -> vai executar o comand
             //printf("Sou o filho %d\n", getpid());
@@ -103,26 +93,26 @@ int main() {
             execlp("./classificador","./classificador", NULL); //VER ESPACOS
             fprintf(stderr, "Comando nao encontrado\n");
             exit(123);
-            return 3;
+           
         }
         //pai aguarda pelo comando e depois continua
         close(balcaoToClassificador[0]);
         close(ClassificadorToBalcao[1]);
 
-        do{
-            printf("\n--> ");
-            fgets(linha,sizeof(linha)-1,stdin);
+        while(strcmp(linha,"fim") != 0) {
+            printf("Comando: ");
+            fgets(linha, sizeof(linha), stdin);
+            verificaComandos(linha);
+        }
 
-            write(balcaoToClassificador[1],linha,strlen(linha));
-            tam = read(ClassificadorToBalcao[0],resposta,sizeof(resposta)-1);
-            resposta[tam] = '\0';
-            printf("%s",resposta);
 
-        }while(strcmp(linha,"#fim\n") != 0);
-        wait(&exstat);
-        unlink("balcao_fifo");
+	
+        //wait(&exstat);
+	    close(balcaoToClassificador[1]); //Fechar descritores
+	    close(ClassificadorToBalcao[0]);
+        unlink("server_fifo");
         exit(0);
-
+    return 0;
 }	
 
 // 1º - Verificar se já existe outro balcão a correr : (comando ps ax diz-me todos os processos que estão a decorrer)

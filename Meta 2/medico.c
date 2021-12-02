@@ -1,16 +1,22 @@
 #include "medico.h"
 #include "utilis.h"
+#include "balcao.h"
 
 int main(int argc, char *nome[NOME_MAX], char *especialidade[ESPECIALIDADE_MAX]){
 
     especialista  a;
 
+    if(access(bal_FIFO, F_OK) != 0){
+        printf("O balcao nao esta a executar\n");
+        exit(2);
+    }
+
     if(argc < 3){
         printf("Faltam argumentos!\n");
         return  -1;
     }
-    printf("Nome: %s\n",a.nome[1]);
-    printf("Especialidade: %s\n",a.especialidade[2]);
+    /*printf("Nome: %s\n",a.nome[1]);
+    printf("Especialidade: %s\n",a.especialidade[2]);*/
 
     return 0;
 }
