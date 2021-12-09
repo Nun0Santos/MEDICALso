@@ -3,9 +3,10 @@
 //
 #ifndef TP_BALCAO_H
 #define TP_BALCAO_H
-#include "medico.h"
-#include "cliente.h"
 
+#define NOME_MAX 26
+#define ESPECIALIDADE_MAX 30
+#define SINTOMA_MAX 30
 //por as structs cliente e medico
 typedef struct Utentes utente, *utente_ptr;
 struct Utentes{

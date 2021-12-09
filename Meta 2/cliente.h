@@ -3,9 +3,6 @@
 //
 #ifndef TP_CLIENTE_H
 #define TP_CLIENTE_H
-#define NOME_MAX 26
-#define SINTOMA_MAX 30
-
 
 //FUNÇÕES
 

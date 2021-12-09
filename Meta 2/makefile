@@ -13,4 +13,4 @@ func_balcao.o:
 	     gcc -c func_balcao.c -o func_balcao.o
 
 clean:
-	rm medico balcao cliente func_balcao.o
+	rm medico balcao cliente func_balcao.o server_fifo client_fifo* 
