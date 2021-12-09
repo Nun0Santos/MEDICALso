@@ -13,15 +13,15 @@ int main() {
     int tam = 0;
     char *MaxClientes_str, *MaxMedicos_str; //Var ambiente
     int MaxClientes, MaxMedicos;
+    int fd_server_fifo,fd_cliente_fifo;
     pergunta_c perg; /* Mensagem do "tipo" pergunta */
     resposta_c resp; /* Mensagem do "tipo" resposta */
     char comando[30],resposta[30];
-    int c_fifo_fname[50];
+    char c_fifo_fname[50];
     pipe(balcaoToClassificador);
     pipe(ClassificadorToBalcao); //Pipe retorno
 
     // VERIFICAR SE O BALCAO ESTA A CORRER
-    int fd_server_fifo,fd_cliente_fifo;
 
     if(access(bal_FIFO, F_OK) == 0){
         printf("Balcão já está  executar\n");
@@ -29,7 +29,9 @@ int main() {
     }
     mkfifo(bal_FIFO, 0777);
     printf("Criei o FIFO do balcão...\n");
-    // abri o fifo
+
+    /* --- Abrir FIFO Servidor --- */
+
     fd_server_fifo = open(bal_FIFO,O_RDWR);
     if((fd_server_fifo) == -1){
         perror("\nErro ao abrir o FIFO do servidor\n");
@@ -37,7 +39,7 @@ int main() {
     }
     fprintf(stderr,"\nFIFO aberto para READ (+WRITE) bloqueante");
 
-    //printf("PID = %d\n",getpid());
+
     MaxClientes_str = getenv("MAXCLIENTES");
     if (MaxClientes_str){
        MaxClientes = atoi(MaxClientes_str);
@@ -56,26 +58,22 @@ int main() {
         printf("Erro ao ler MaxMedicos\n");
         return -1;
     }
-
     printf("MAXMEDICOS = %d\n",MaxMedicos);
 
    utente* ptrUtentes;
    especialista* ptrEspecialistas;
 
    ptrUtentes = malloc(sizeof(utente) * MaxClientes);
-
    if (ptrUtentes == NULL) {
        printf("Erro na alocacao dos utentes!\n");
        return -1;
    }
 
    ptrEspecialistas = malloc(sizeof(especialista) * MaxMedicos);
-
    if (ptrEspecialistas == NULL) {
        printf("Erro na alocacao dos medicos especialistas!\n");
        return -1;
    }
-
         res = fork();
         if (res == 0) { //filho -> vai executar o comand
             //printf("Sou o filho %d\n", getpid());
@@ -108,7 +106,7 @@ int main() {
         write(balcaoToClassificador[1], perg.frase, sizeof(perg.frase));
         /* --- OBTEM RESPOSTA DO CLASSIFICADOR --- */
         res = read(ClassificadorToBalcao[0],resp.frase,sizeof(resp.frase)-1);
-        resp.frase[tam] = '\0';
+        resp.frase[res] = '\0';
         fprintf(stderr,"\nResposta = [%s]",resp.frase);
         /* --- OBTEM FILENAME DO FIFO PARA A RESPOSTA --- */
         sprintf(c_fifo_fname,CLIENT_FIFO,perg.pid_cliente);

@@ -41,8 +41,6 @@ int  verificaComandos(char *comando) {
 
 }
 
-
-
 void utentes (utente_ptr array_utente, int n_utentes){
 
 }

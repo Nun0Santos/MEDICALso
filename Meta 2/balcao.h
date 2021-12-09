@@ -7,7 +7,7 @@
 #define NOME_MAX 26
 #define ESPECIALIDADE_MAX 30
 #define SINTOMA_MAX 30
-//por as structs cliente e medico
+
 typedef struct Utentes utente, *utente_ptr;
 struct Utentes{
     char nome[NOME_MAX];
@@ -21,12 +21,6 @@ struct especialistas{
     char especialidade[ESPECIALIDADE_MAX];
     int medico_id; //PID do processo
 };
-
-
-//FUNÇÕES
-
-
-
 
 
 #endif //TP_BALCAO_H
