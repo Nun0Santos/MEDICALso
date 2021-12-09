@@ -4,41 +4,42 @@
 #include "balcao.h"
 #include "func_balcao.h"
 #include "utilis.h"
-#include <fcntl.h>
-
+#include <signal.h>
 
 
 int main() {
     char linha[100]; // espaco alocado para escrita de comandos
-    int res,tam,exstat,balcaoToClassificador[2],ClassificadorToBalcao[2];
-
+    int res,exstat,balcaoToClassificador[2],ClassificadorToBalcao[2];
+    int tam = 0;
     char *MaxClientes_str, *MaxMedicos_str; //Var ambiente
     int MaxClientes, MaxMedicos;
-    char resposta[30];
-
+    int fd_server_fifo,fd_cliente_fifo;
+    pergunta_c perg; /* Mensagem do "tipo" pergunta */
+    resposta_c resp; /* Mensagem do "tipo" resposta */
+    char comando[30],resposta[30];
+    char c_fifo_fname[50];
     pipe(balcaoToClassificador);
     pipe(ClassificadorToBalcao); //Pipe retorno
 
     // VERIFICAR SE O BALCAO ESTA A CORRER
-    int fd_server_fifo,fd_client_fifo;
 
     if(access(bal_FIFO, F_OK) == 0){
         printf("Balcão já está  executar\n");
         exit(2);
     }
+    mkfifo(bal_FIFO, 0777);
+    printf("Criei o FIFO do balcão...\n");
 
-    mkfifo(bal_FIFO, 0600);
-    printf("Criei o FIFO bo balcão...\n");
+    /* --- Abrir FIFO Servidor --- */
 
-    // abri o fifo
     fd_server_fifo = open(bal_FIFO,O_RDWR);
-
-
     if((fd_server_fifo) == -1){
-        printf("Erro na Abertura\n");
-        exit(2);
+        perror("\nErro ao abrir o FIFO do servidor\n");
+        exit(EXIT_FAILURE);
     }
-    printf("PID = %d\n",getpid());
+    fprintf(stderr,"\nFIFO aberto para READ (+WRITE) bloqueante");
+
+
     MaxClientes_str = getenv("MAXCLIENTES");
     if (MaxClientes_str){
        MaxClientes = atoi(MaxClientes_str);
@@ -47,7 +48,7 @@ int main() {
         printf("Erro ao ler MAXCLIENTES\n");
         return -1;
     }
-    printf("MAXCLIENTE = %d\n",MaxClientes);
+    printf("\nMAXCLIENTE = %d\n",MaxClientes);
 
     MaxMedicos_str = getenv("MAXMEDICOS");
     if (MaxMedicos_str){
@@ -57,26 +58,22 @@ int main() {
         printf("Erro ao ler MaxMedicos\n");
         return -1;
     }
-
     printf("MAXMEDICOS = %d\n",MaxMedicos);
 
    utente* ptrUtentes;
    especialista* ptrEspecialistas;
 
    ptrUtentes = malloc(sizeof(utente) * MaxClientes);
-
    if (ptrUtentes == NULL) {
        printf("Erro na alocacao dos utentes!\n");
        return -1;
    }
 
    ptrEspecialistas = malloc(sizeof(especialista) * MaxMedicos);
-
    if (ptrEspecialistas == NULL) {
        printf("Erro na alocacao dos medicos especialistas!\n");
        return -1;
    }
-
         res = fork();
         if (res == 0) { //filho -> vai executar o comand
             //printf("Sou o filho %d\n", getpid());
@@ -98,30 +95,44 @@ int main() {
         //pai aguarda pelo comando e depois continua
         close(balcaoToClassificador[0]);
         close(ClassificadorToBalcao[1]);
-
-        while(strcmp(linha,"fim\n") != 0) {
-            printf("Comando: ");
-            fgets(linha, sizeof(linha), stdin);
-            verificaComandos(linha);
+    while(1){
+        /* --- OBTEM FRASE DO CLIENTE --- */
+        res = read(fd_server_fifo,&perg,sizeof(perg));
+        if(res < sizeof (perg)){
+            fprintf(stderr,"\nRecebida pergunta incompleta [bytes lidos: %d]",res);
+            continue;
         }
+        fprintf(stderr,"\nRecebido [%s]",perg.frase);
+        write(balcaoToClassificador[1], perg.frase, sizeof(perg.frase));
+        /* --- OBTEM RESPOSTA DO CLASSIFICADOR --- */
+        res = read(ClassificadorToBalcao[0],resp.frase,sizeof(resp.frase)-1);
+        resp.frase[res] = '\0';
+        fprintf(stderr,"\nResposta = [%s]",resp.frase);
+        /* --- OBTEM FILENAME DO FIFO PARA A RESPOSTA --- */
+        sprintf(c_fifo_fname,CLIENT_FIFO,perg.pid_cliente);
+        /* --- ABRE O FIFO DO CLIENTE P/WRITE --- */
+        fd_cliente_fifo = open (c_fifo_fname,O_WRONLY);
+        if(fd_cliente_fifo == -1)
+            perror("\nErro no open - Ninguém quis a resposta");
+        else {
+            fprintf(stderr,"\nFIFO cliente aberto para WRITE");
+            /* --- ENVIA RESPOSTA --- */
+            res = write(fd_cliente_fifo,&resp,sizeof (resp));
+            if(res == sizeof(resp))
+                fprintf(stderr,"\nEscreveu a resposta");
+            else
+                perror("\nErro a escrever a resposta");
 
-        /*do{
-            printf("\n--> ");
-            fgets(linha,sizeof(linha)-1,stdin);
-
-            write(balcaoToClassificador[1],linha,strlen(linha));
-            tam = read(ClassificadorToBalcao[0],resposta,sizeof(resposta)-1);
-            resposta[tam] = '\0';
-            printf("%s",resposta);
-
-        }while(strcmp(linha,"#fim\n") != 0);*/
-	
+            close(fd_cliente_fifo); /* FECHA LOGO O FIFO DO CLIENTE */
+            fprintf(stderr,"\nFIFO cliente fechado");
+        }
+    } /* FIM DO CICLO PRINCIPAL DO SERVIDOR*/
+        close(fd_server_fifo);
         wait(&exstat);
 	    close(balcaoToClassificador[1]); //Fechar descritores
 	    close(ClassificadorToBalcao[0]);
-        unlink("balcao_fifo");
-        //exit(0);
-    return 0;
+        unlink("server_fifo");
+        return 0;
 }	
 
 // 1º - Verificar se já existe outro balcão a correr : (comando ps ax diz-me todos os processos que estão a decorrer)
