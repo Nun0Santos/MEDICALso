@@ -1,7 +1,7 @@
 all: medico cliente balcao func_balcao.o
 
 balcao: func_balcao.o
-	gcc balcao.c func_balcao.o -o balcao
+	gcc balcao.c func_balcao.o -o balcao -lpthread
 
 medico:
 	gcc medico.c -o medico

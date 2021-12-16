@@ -1,11 +1,10 @@
 //
 // Created by user on 07/11/21.
 //
-#include "balcao.h"
 #include "func_balcao.h"
 #include "utilis.h"
-#include <signal.h>
 
+void * trataPipes();
 
 int main() {
     char linha[100]; // espaco alocado para escrita de comandos
@@ -14,18 +13,35 @@ int main() {
     char *MaxClientes_str, *MaxMedicos_str; //Var ambiente
     int MaxClientes, MaxMedicos;
     int fd_server_fifo,fd_cliente_fifo;
-    pergunta_c perg; /* Mensagem do "tipo" pergunta */
-    resposta_c resp; /* Mensagem do "tipo" resposta */
     char comando[30],resposta[30];
     char c_fifo_fname[50];
+    fd_set read_fds; //Conjunto das flags para desc. de ficheiros
     pipe(balcaoToClassificador);
     pipe(ClassificadorToBalcao); //Pipe retorno
+    char buffer[200];
+    pthread_t tpipeSv;
+    ThrDados tdados[2];
+
+    /* --- THREAD PARA LIDAR COM CLIENTES E MEDICOS --- */
+    strcpy(tdados[0].qual, "Pipe Servidor"); tdados[0].fd= fd_server_fifo;
+    if(pthread_create(&tpipeSv,NULL,trataPipes,tdados) != 0){
+        printf("Houve um problema a criar a thread 1");
+    }
+
+    /* --- THREAD PARA LIDAR COM STDIN --- */
+
+
+
+
+
+
+
 
     // VERIFICAR SE O BALCAO ESTA A CORRER
 
     if(access(bal_FIFO, F_OK) == 0){
         printf("Balcão já está  executar\n");
-        exit(2);
+        exit(1);
     }
     mkfifo(bal_FIFO, 0777);
     printf("Criei o FIFO do balcão...\n");
@@ -96,36 +112,11 @@ int main() {
         close(balcaoToClassificador[0]);
         close(ClassificadorToBalcao[1]);
     while(1){
-        /* --- OBTEM FRASE DO CLIENTE --- */
-        res = read(fd_server_fifo,&perg,sizeof(perg));
-        if(res < sizeof (perg)){
-            fprintf(stderr,"\nRecebida pergunta incompleta [bytes lidos: %d]",res);
-            continue;
-        }
-        fprintf(stderr,"\nRecebido [%s]",perg.frase);
-        write(balcaoToClassificador[1], perg.frase, sizeof(perg.frase));
-        /* --- OBTEM RESPOSTA DO CLASSIFICADOR --- */
-        res = read(ClassificadorToBalcao[0],resp.frase,sizeof(resp.frase)-1);
-        resp.frase[res] = '\0';
-        fprintf(stderr,"\nResposta = [%s]",resp.frase);
-        /* --- OBTEM FILENAME DO FIFO PARA A RESPOSTA --- */
-        sprintf(c_fifo_fname,CLIENT_FIFO,perg.pid_cliente);
-        /* --- ABRE O FIFO DO CLIENTE P/WRITE --- */
-        fd_cliente_fifo = open (c_fifo_fname,O_WRONLY);
-        if(fd_cliente_fifo == -1)
-            perror("\nErro no open - Ninguém quis a resposta");
-        else {
-            fprintf(stderr,"\nFIFO cliente aberto para WRITE");
-            /* --- ENVIA RESPOSTA --- */
-            res = write(fd_cliente_fifo,&resp,sizeof (resp));
-            if(res == sizeof(resp))
-                fprintf(stderr,"\nEscreveu a resposta");
-            else
-                perror("\nErro a escrever a resposta");
+        scanf("%199[^\n]",buffer);
+        printf("Teclado : [%s]\n",buffer);
+        if(strcmp(buffer,"sair") == 0)
+            encerra();
 
-            close(fd_cliente_fifo); /* FECHA LOGO O FIFO DO CLIENTE */
-            fprintf(stderr,"\nFIFO cliente fechado");
-        }
     } /* FIM DO CICLO PRINCIPAL DO SERVIDOR*/
         close(fd_server_fifo);
         wait(&exstat);
@@ -133,7 +124,24 @@ int main() {
 	    close(ClassificadorToBalcao[0]);
         unlink("server_fifo");
         return 0;
-}	
+}
+
+void *trataPipes(void *p){
+    char * qual = ( (ThrDados *) p)->qual;
+    int fd = ( (ThrDados *) p)->fd;
+    char buffer[200];
+    int bytes;
+    while(1){
+        bytes = read(fd,buffer,sizeof (buffer));
+        buffer[bytes] = '\0';
+        if((bytes > 0) && (buffer[strlen(buffer)-1] == '\n') )
+            buffer[strlen(buffer)-1] = '\0';
+        printf("%s (%d bytes) [%s]\n",qual,bytes,buffer);
+        if(strcmp(buffer,"sair") == 0)
+            encerra();
+    }
+    return NULL;
+}
 
 // 1º - Verificar se já existe outro balcão a correr : (comando ps ax diz-me todos os processos que estão a decorrer)
 

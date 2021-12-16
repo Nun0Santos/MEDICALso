@@ -16,22 +16,22 @@ int  verificaComandos(char *comando) {
         if (strcmp(comando, cmds[i]) == 0) {
             //utentes();
         }
-        if (strcmp(comando, "especialistas") == 0) {
+        if (strcmp(comando, cmds[i]) == 0) {
             //especialistas();
         }
-        if (strcmp(comando, cmds[i]) == 0) {
+        if (strcmp(comando, cmds[2]) == 0) {
             delutX();
         }
-        if (strcmp(comando, "delespX") == 0) {
+        if (strcmp(comando, cmds[i]) == 0) {
             delespX();
         }
         if (strcmp(comando, cmds[i]) == 0) {
             freqN();
         }
-        if (strcmp(comando, "encerra") == 0) {
+        if (strcmp(comando, cmds[i]) == 0) {
             encerra();
         }
-        if (strcmp(comando, "sintoma") == 0) {
+        if (strcmp(comando, cmds[i]) == 0) {
             sintoma();
         } else {
             printf("Comando invalido\n");
@@ -49,7 +49,7 @@ void especialistas(especialista_ptr array_especialista, int n_especialistas){
 }
 
 utente_ptr delutX(){
-printf("Chegeui ao delutX");
+printf("Chegeui ao delutX\n");
 
 }
 especialista_ptr delespX(){
@@ -60,6 +60,10 @@ void freqN(){
 
 }
 void encerra(){
+    unlink("");
+    unlink("");
+    printf("encerra\n");
+    exit(EXIT_SUCCESS);
 
 }
 char sintoma(){

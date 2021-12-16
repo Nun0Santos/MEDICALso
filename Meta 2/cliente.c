@@ -1,17 +1,12 @@
 
 #include "utilis.h"
-#include "balcao.h"
-#include "string.h"
-
 
 int main(int argc, char *argv[]){
         int fd_server_fifo,fd_cliente_fifo;
-        pergunta_c perg; /* Mensagem do "tipo" pergunta */
-        resposta_c resp; /* Mensagem do "tipo" resposta */
         char c_fifo_fname[25]; /* Nome do FIFO deste cliente */
         int read_res;
         utente a;
-        strcpy(a.nome,argv[1]);
+
         if(access(bal_FIFO, F_OK) != 0){
         printf("O balcao nao esta a executar\n");
         exit(2);
@@ -20,10 +15,12 @@ int main(int argc, char *argv[]){
             printf("Faltam argumentos!\n");
             return -1;
         }
+        //strcpy(a.nome,argv[1]);
         printf("%s",a.nome);
         /*--- Cria o FIFO do Cliente --- */
-        perg.pid_cliente = getpid();
-        sprintf(c_fifo_fname,CLIENT_FIFO,perg.pid_cliente);
+
+        a.cliente_id = getpid();
+        sprintf(c_fifo_fname,CLIENT_FIFO,a.cliente_id);
         if(mkfifo(c_fifo_fname,0777) ==  -1){
             perror("\nmkfifo FIFO cliente deu erro");
             exit(EXIT_FAILURE);
@@ -46,26 +43,27 @@ int main(int argc, char *argv[]){
             exit(EXIT_FAILURE);
         }
         fprintf(stderr,"\nFIFO do cliente aberto  para READ (+write) BLOCK");
-        memset(perg.frase, '\0',TAM_MAX);
+        //memset(perg.frase, '\0',TAM_MAX);
+        pause();
 
-        while(1){
-            /* ---  OBTEM PERGUNTA --- */
+        /*while(1){
+            // ---  OBTEM PERGUNTA ---
             printf("\n--> ");
             fgets(perg.frase,sizeof(perg.frase),stdin);
             if(!strcasecmp(perg.frase,"fim"))
                 break;
-            /* --- ENVIA A PERGUNTA --- */
+            // --- ENVIA A PERGUNTA ---
             write(fd_server_fifo,&perg,sizeof(perg));
-            /* --- OBTEM A RESPOSTA --- */
+            // --- OBTEM A RESPOSTA ---
             read_res = read(fd_cliente_fifo, &resp, sizeof(resp));
             if (read_res == sizeof (resp))
                 printf("\n Resposta [%s]",resp.frase);
             else
                 printf("\nSem Resposta ou resposta incompreensivel [bytes lidos : %d]",read_res);
-        }
+        }*/
         close(fd_cliente_fifo);
         close(fd_server_fifo);
-        unlink(c_fifo_fname);
+       unlink(c_fifo_fname);
         return 0;
 }
 

@@ -1,6 +1,6 @@
 #include "medico.h"
 #include "cliente.h"
-#include "balcao.h"
+#include "utilis.h"
 
 void utentes (utente_ptr array_utente, int n_utentes);
 void especialistas(especialista_ptr array_especialista, int n_especialistas);
