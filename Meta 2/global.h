@@ -18,4 +18,20 @@
 #include <signal.h>
 #include <pthread.h>
 
+#define NOME_MAX 26
+#define ESPECIALIDADE_MAX 30
+#define SINTOMA_MAX 256
+#define MAX_FILAS 5
+
+/* Nome do FIFO do Servidor */
+#define bal_FIFO "server_fifo"
+
+/* Nome do FIFO para cada cliente, %d será substituído pelo PID com sprintf */
+#define CLIENT_FIFO "client_fifo_%d"
+
+/* Nome do FIFO para cada medico, %d será substituído pelo PID com sprintf */
+#define MEDICO_FIFO "medico_fifo_%d"
+
+
+
 #endif //META_2_GLOBAL_H
