@@ -12,27 +12,36 @@ typedef struct {
     char sintoma[SINTOMA_MAX];
     char especialidade[ESPECIALIDADE_MAX];
     char classificao[ESPECIALIDADE_MAX];
-    int teste_id_utente;
-    char estado;
-    int cheio; // 1 - livre 0- cheio
+    int filas[MAX_FILAS];
+    pid_t id_utente, id_medico; //PID do processo
     int  prioridade;
     char msg[256];
-    char resp[256];
-    pid_t id_utente, id_medico; //PID do processo
     int  cliente; //Saber se e cliente ou medico | 1 -> Cliente | 0 -> Medico
-    int registo; //medico
-    int registo_utente;
-    int filas[MAX_FILAS];
-    bool disponivel; //ver se especialista esta disponivel
+    int cheio; // 1 - livre 0- cheio
+    int sair;
+    int temp;
+    int registo_medico;
+    int registo_utente; // 1 ->
 
-    /*int MaxClientes;
-    int MaxMedicos;
 
-    int nClientes;
-    int nMedicos;*/
+    int estado_utente; // 0 -> n esta em consulta 1-> consulta
+    int estado_medico; //0 -> n esta em consulta 1-> consulta
+    int flagA,flagB,flagC; //para a segunda resposta
+    int consulta; // 0 -> não esta  1 -> está
+    pthread_mutex_t *m;  // Partilhado
+
+
 }balcao;
 
+/*BALCAO */
+typedef struct THbalcao{
+    int continua;
+    int maxClientes, maxMedicos;
+    balcao p_cli[5];
+    balcao p_med[5];
+    int ite_cli , ite_med;//"iteradores"
 
+}thbalcao;
 
 
 #endif //TP_UTILIS_H

@@ -15,8 +15,9 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <sys/select.h>
 #include <signal.h>
-#include <pthread.h>
+
 
 #define NOME_MAX 26
 #define ESPECIALIDADE_MAX 30
@@ -32,6 +33,6 @@
 /* Nome do FIFO para cada medico, %d será substituído pelo PID com sprintf */
 #define MEDICO_FIFO "medico_fifo_%d"
 
-
+#define FIFO_SINAL "sinal"
 
 #endif //META_2_GLOBAL_H

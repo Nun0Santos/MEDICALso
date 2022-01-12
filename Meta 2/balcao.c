@@ -4,23 +4,54 @@
 #include "func_balcao.h"
 #include "utilis.h"
 
+void acorda(int s, siginfo_t *info, void* uc){}
+
+void* mostraListas(void* dados){
+    thbalcao *td = (thbalcao* ) dados;
+
+    do {
+        sleep(20),
+                printf("\nClientes: ");
+        for (int i = 0; i < td->ite_cli; ++i) {
+            printf("\nCliente %d:", i);
+            printf("\n\tPID: %d", td->p_cli[i].id_utente);
+            printf("\n\tClassificacao: %s %d", td->p_cli[i].classificao, td->p_cli[i].prioridade);
+            printf("\n\tEsta em consulta? (0->nao | 1->sim): %d\n", td->p_cli[i].consulta);
+        }
+        for (int i = 0; i < td->ite_med; ++i) {
+            printf("\nMedico %d:", i);
+            printf("\n\tPID: %d", td->p_med[i].id_medico);
+            printf("\n\tEsta em consulta? (0->nao | 1->sim): %d\n", td->p_med[i].consulta);
+            ++td->p_med[i].temp;
+        }
+    }while(td->continua == 0);
+
+    pthread_exit(NULL);
+}
 
 int main() {
-    char comando[100], especialidade[256], sintoma[256], resposta[256];
-    int res, tam = 0, n, prioridade = 0, MaxClientes, MaxMedicos, nClientes = 0, nMedicos = 0,n_write;
+    char comando[100], sintoma[256], resposta[256];
+    int res, tam = 0, n, MaxClientes, MaxMedicos, nClientes = 0, nMedicos = 0,n_write;
     char *MaxClientes_str, *MaxMedicos_str,str_com[40]; //Var ambiente
 
     int balcaoToClassificador[2],ClassificadorToBalcao[2];
     pipe(balcaoToClassificador);
     pipe(ClassificadorToBalcao); //Pipe retorno
 
-    int fd_cliente_fifo, fd_server_fifo;
+    int fd_cliente_fifo, fd_server_fifo,fd_sinal;
     char c_fifo_fname[50]; // Nome do fifo do cliente
     char m_fifo_fname[50]; // Nome do fifo do medico
-    char *sintomas[5] ={"geral","ortopedia","estamatologia","neurologia","oftalmologia"};
 
     fd_set fds;
     struct timeval tempo;
+    pthread_t tid;
+    thbalcao t;
+    struct sigaction act;
+    act.sa_sigaction = acorda;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGUSR2, &act, NULL);
+
+    setbuf(stdout, NULL);
 
     balcao clientes[5]; //array de estrutura  para utentes
     balcao medicos[5]; //array de estrutura para medicos
@@ -51,6 +82,7 @@ int main() {
     MaxClientes_str = getenv("MAXCLIENTES");
     if (MaxClientes_str) {
         MaxClientes = atoi(MaxClientes_str);
+        t.maxClientes = MaxClientes;
     } else {
         printf("Erro ao ler MAXCLIENTES\n");
         encerra();
@@ -61,6 +93,7 @@ int main() {
     MaxMedicos_str = getenv("MAXMEDICOS");
     if (MaxMedicos_str) {
         MaxMedicos = atoi(MaxMedicos_str);
+        t.maxMedicos = MaxMedicos;
     } else {
         printf("Erro ao ler MaxMedicos\n");
         encerra();
@@ -92,6 +125,9 @@ int main() {
     close(balcaoToClassificador[0]);
     close(ClassificadorToBalcao[1]);
 
+    t.continua = 1;
+    pthread_create(&tid, NULL, mostraListas, (void* ) &t);
+
     do{
         /* ======================= SELECT ======================= */
         printf("Comando?\n");
@@ -100,296 +136,327 @@ int main() {
         FD_ZERO(&fds);
         FD_SET(0, &fds);
         FD_SET(fd_server_fifo, &fds);
-
+        FD_SET(fd_sinal, &fds);
         tempo.tv_sec = 8;
         tempo.tv_usec = 0;
 
         res = select(fd_server_fifo + 1, &fds, NULL, NULL, &tempo); //Primiero campo e o descritor mais alto +1
         if (res == 0) {
            // printf("Estou sem nada para fazer\n");
-        } else if (res > 0 && FD_ISSET(0, &fds)) {
-            /* ======================= TECLADO ======================= */
-            scanf("%s", comando);
-            if(strcasecmp(comando,"sair") == 0){
-                encerra();
+        } else if (res > 0) {
+            if (FD_ISSET(0, &fds)) {
+                /* ======================= TECLADO ======================= */
+                scanf("%s", comando);
+                if (strcasecmp(comando, "sair") == 0) {
+                    encerra();
+                } else if (strcmp(comando, "utentes") == 0) {
+                    utentes(clientes, nClientes);
+                } else if (strcmp(comando, "especialistas") == 0) {
+                    especialistas(medicos, nMedicos);
+                }
+
             }
-            else if(strcmp(comando,"utentes") == 0){
-                utentes(&clientes[5],nClientes);
-            }
-            else if(strcmp(comando,"especialistas") == 0){
-                especialistas(medicos[5],nMedicos);
-            }
+            if (FD_ISSET(fd_server_fifo, &fds)) {
+                /* ======================= RECEBE STRUCT BALCAO ======================= */
+                n = read(fd_server_fifo, &b, sizeof(balcao));
+                if (n == -1) {
+                    printf("\nNão conseguiu ler...");
+                    exit(1);
+                }
+                printf("Recebi %d bytes ....\n", n);
+                /*if(b.flagC == 0){
+                    printf("%s\n",b.msg);
+                }*/
+                if (n == sizeof(balcao)) {
+                    if (b.cliente == 1) {
+                        if (t.ite_cli <= t.maxClientes - 1) {
+                            b.registo_utente = 1; // esta registado
+                            //b.cheio =1;*/
+                            /*if(b.registo_utente == 1){
+                                if(strcmp(b.msg,"sair") == 0){
+                                    printf("O utente [%d] terminou a ligação\n",b.id_utente);
+                                    continue;
+                                }
+                            }*/
+                            //strcpy(b.msg, "Esta ligado ao balcao!");
+                            printf("Novo utente [%d] com o sintoma: %s\n", b.id_utente, b.sintoma);
 
+                            /* ======================= ENVIAR SINTOMAS AO CLASSIFICADOR ======================= */
+                            strcpy(sintoma, b.sintoma);
+                            n_write = write(balcaoToClassificador[1], sintoma, strlen(sintoma));
+                            if (n_write == -1) {
+                                printf("\nNão conseguiu escrever...");
+                                exit(1);
+                            }
+                            tam = read(ClassificadorToBalcao[0], resposta, sizeof(resposta) - 1);
+                            if (tam == -1) {
+                                printf("\nNão conseguiu ler...");
+                                exit(1);
+                            }
+                            resposta[tam] = '\0';
+                            /* ======================= SEPARAR RESPOSTA ======================= */
+                            sscanf(resposta, "%s %d", b.classificao, &b.prioridade);
+                            printf("O utente [%d] tem a  especialidade = [%s] com prioridade = [%d]\n", b.id_utente,
+                                   b.classificao, b.prioridade);
+                            strcpy(b.sintoma, sintoma);
 
-        } else if (res > 0 && FD_ISSET(fd_server_fifo, &fds)) {
-            /* ======================= RECEBE STRUCT BALCAO ======================= */
-            n = read(fd_server_fifo, &b, sizeof(balcao));
-            if (n == -1) {
-                printf("\nNão conseguiu ler...");
-                exit(1);
-            }
-            printf("Recebi %d bytes ....\n", n);
+                            /* ======================= ABRIR FIFO DO CLIENTE ======================= */
+                            sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
+                            fd_cliente_fifo = open(c_fifo_fname, O_WRONLY);
+                            printf("Abri o Fifo do cliente \n");
 
-            if (n == sizeof(balcao)) {
-                if (b.cliente == 1) {
-                    if (nClientes <= MaxClientes -1 ) {
-                        b.cheio =1;
+                            /* ======================= ENVIAR RESPOSTA AO CLIENTE ======================= */
+                            n = write(fd_cliente_fifo, &b, sizeof(balcao));
+                            if (n == -1) {
+                                printf("\nNão conseguiu escrever...");
+                                exit(1);
+                            }
 
-                        printf("Novo utente [%d] com o sintoma: %s\n", b.id_utente, b.sintoma);
+                            close(fd_cliente_fifo);
+                            t.p_cli[t.ite_cli] = b;
+                            ++t.ite_cli;
+                            //clientes[nClientes] = b;
+                            //nClientes++;
 
-                        /* ======================= ENVIAR SINTOMAS AO CLASSIFICADOR ======================= */
-                        strcpy(sintoma, b.sintoma);
-                        n_write = write(balcaoToClassificador[1], sintoma, strlen(sintoma));
-                        if (n_write == -1) {
-                            printf("\nNão conseguiu escrever...");
-                            exit(1);
+                            printf("\nN. clientes: %d\n", t.ite_cli);
+                            printf("Enviei %d  bytes ao utente...\n", n);
+
+                        } else {
+                            b.cheio = 0;
+                            strcpy(b.msg, "O balcão não consegue atender mais clientes - volte mais tarde");
+                            sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
+                            fd_cliente_fifo = open(c_fifo_fname, O_WRONLY);
+                            n_write = write(fd_cliente_fifo, &b, sizeof(balcao));
+                            if (n_write == -1) {
+                                printf("\nNão consegui escrever no FIFO do cliente\n");
+                                exit(1);
+                            }
+                            close(fd_cliente_fifo);
+                            continue;
                         }
-                        tam = read(ClassificadorToBalcao[0], resposta, sizeof(resposta) - 1);
-                        if (tam == -1) {
-                            printf("\nNão conseguiu ler...");
-                            exit(1);
+                    } else {
+                        if (t.ite_med <= t.maxMedicos - 1) {
+                            strcpy(b.msg, "Esta ligado ao balcao!");
+                            b.registo_medico = 1;
+                            b.cheio=1;
+
+                            if (b.registo_medico == 1) {
+                                if (strcmp(b.msg, "sair") == 0) {
+                                    printf("O especialista [%d] terminou a ligação\n", b.id_medico);
+                                    continue;
+                                }
+                            }
+
+                            sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                            fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                            n_write = write(fd_cliente_fifo, &b, sizeof(balcao));
+                            if (n_write == -1) {
+                                printf("\nNão conseguiu escrever...");
+                                exit(1);
+                            }
+                            close(fd_cliente_fifo);
+                            t.p_med[t.ite_med] = b;
+                            ++t.ite_med;
+                            //medicos[nMedicos] = b;
+                            //nMedicos++;
+                            printf("\nN. medicos: %d\n", t.ite_med);
+                            printf("Novo especialista [%d] para a especialidade [%s]\n", b.id_medico, b.especialidade);
+
+                            if (strcmp(b.especialidade, "geral") == 0 && b.filas[0] < 5) {
+                                printf("Entrei no geral\n");
+                                /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
+                                for (int i = 0; i < nClientes; i++) {
+                                    if (strcmp(clientes[i].classificao, b.especialidade) == 0) {
+                                        printf("Há cliente para essa especialidade\n");
+                                        clientes[i].registo_utente = 2;
+                                        clientes[i].consulta = 1;
+                                        /* ======================= ABRIR FIFO DO MEDICO ======================= */
+                                        sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                                        fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                                        printf("Abri o Fifo do medico \n");
+
+                                        n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
+                                        if (n == -1) {
+                                            printf("\nNão conseguiu escrever...");
+                                            exit(1);
+                                        }
+                                        close(fd_cliente_fifo);
+                                        printf("Enviei %d  bytes...\n", n);
+                                    }
+                                }
+                                b.filas[0]++;
+                            } else if (strcmp(b.especialidade, "ortopedia") == 0 && b.filas[1] < 5) {
+                                printf("Entrei na ortopedia\n");
+                                /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
+                                for (int i = 0; i < nClientes; i++) {
+                                    if (strcmp(clientes[i].classificao, b.especialidade) == 0) {
+                                        printf("Há cliente para essa especialidade\n");
+                                        clientes[i].registo_utente = 2;
+                                        strcpy(clientes[i].msg, "Esta ligado ao balcao!");
+
+                                        /* ======================= ABRIR FIFO DO MEDICO ======================= */
+                                        sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                                        fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                                        printf("Abri o Fifo do medico \n");
+
+                                        n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
+
+                                        if (n == -1) {
+                                            printf("\nNão conseguiu escrever...");
+                                            exit(1);
+                                        }
+                                        close(fd_cliente_fifo);
+                                        printf("Enviei %d  bytes...\n", n);
+                                    }
+                                }
+                                b.filas[1]++;
+                            } else if (strcmp(b.especialidade, "estamatologia") == 0 && b.filas[2] < 5) {
+                                printf("Entrei na estamatologia\n");
+                                /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
+                                for (int i = 0; i < nClientes; i++) {
+                                    if (strcmp(clientes[i].classificao, b.especialidade) == 0) {
+                                        printf("Há cliente para essa especialidade\n");
+                                        clientes[i].registo_utente = 2;
+                                        strcpy(clientes[i].msg, "Esta ligado ao balcao!");
+
+                                        /* ======================= ABRIR FIFO DO MEDICO ======================= */
+                                        sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                                        fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                                        printf("Abri o Fifo do medico \n");
+
+                                        n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
+
+                                        if (n == -1) {
+                                            printf("\nNão conseguiu escrever...");
+                                            exit(1);
+                                        }
+                                        close(fd_cliente_fifo);
+                                        printf("Enviei %d  bytes...\n", n);
+                                    }
+                                }
+                                b.filas[2]++;
+                            } else if (strcmp(b.especialidade, "neurologia") == 0 && b.filas[3] < 5) {
+                                printf("Entrei na neurologia\n");
+                                /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
+                                for (int i = 0; i < nClientes; i++) {
+                                    if (strcmp(clientes[i].classificao, b.especialidade) == 0) {
+                                        printf("Há cliente para essa especialidade\n");
+                                        clientes[i].registo_utente = 2;
+                                        strcpy(clientes[i].msg, "Esta ligado ao balcao!");
+
+                                        /* ======================= ABRIR FIFO DO MEDICO ======================= */
+                                        sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                                        fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                                        printf("Abri o Fifo do medico \n");
+
+                                        n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
+
+                                        if (n == -1) {
+                                            printf("\nNão conseguiu escrever...");
+                                            exit(1);
+                                        }
+                                        close(fd_cliente_fifo);
+                                        printf("Enviei %d  bytes...\n", n);
+                                    }
+                                }
+                                b.filas[3]++;
+                            } else if (strcmp(b.especialidade, "oftalmologia") == 0 && b.filas[4] < 5) {
+                                printf("Entrei na oftalmologia\n");
+                                /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
+                                for (int i = 0; i < nClientes; i++) {
+                                    if (strcmp(clientes[i].classificao, b.especialidade) == 0) {
+                                        printf("Há cliente para essa especialidade\n");
+                                        clientes[i].registo_utente = 2;
+                                        strcpy(clientes[i].msg, "Esta ligado ao balcao!");
+
+                                        /* ======================= ABRIR FIFO DO MEDICO ======================= */
+                                        sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                                        fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                                        printf("Abri o Fifo do medico \n");
+
+                                        n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
+
+                                        if (n == -1) {
+                                            printf("\nNão conseguiu escrever...");
+                                            exit(1);
+                                        }
+                                        close(fd_cliente_fifo);
+                                        printf("Enviei %d  bytes...\n", n);
+                                    }
+                                }
+                                b.filas[4]++;
+                            } else {
+                                /* ======================= ENVIAR PARA MEDICO QUE NAO HÁ UTENTES PARA ESSA ESPECIALIDADE ======================= */
+                                b.registo_medico = -1;
+                                strcpy(b.msg, "Não há utentes para essa especialdiade");
+                                /* ======================= ABRIR FIFO DO MEDICO ======================= */
+                                sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                                fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                                printf("Abri o Fifo do medico \n");
+                                n = write(fd_cliente_fifo, &b, sizeof(balcao));
+
+                                if (n == -1) {
+                                    printf("Não consegui escrever par o FIFO do médico\n");
+                                    exit(1);
+                                }
+                                close(fd_cliente_fifo);
+                                printf("Enviei %d  bytes...\n", n);
+                            }
+                        } else {
+                            /* ======================= ENVIAR PARA MEDICO QUE NAO E POSSIVEL REGISTAR ======================= */
+                            b.registo_medico = 0;
+                            b.cheio = 0;
+                            sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
+                            fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
+                            n_write = write(fd_cliente_fifo, &b, sizeof(balcao));
+                            if (n_write == -1) {
+                                printf("\nNão consegui escrever no FIFO do médico...\n");
+                                exit(1);
+                            }
+                            close(fd_cliente_fifo);
+                            printf("Enviei %d  bytes...\n", n);
+                            continue;
                         }
-                        resposta[tam] = '\0';
-                        /* ======================= SEPARAR RESPOSTA ======================= */
-                        sscanf(resposta, "%s %d", b.classificao, &b.prioridade);
-                        printf("O utente [%d] tem a  especialidade = [%s] com prioridade = [%d]\n", b.id_utente,
-                               b.classificao, b.prioridade);
-                        strcpy(b.sintoma, sintoma);
-
-                        /* ======================= ABRIR FIFO DO CLIENTE ======================= */
-                        sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
-                        fd_cliente_fifo = open(c_fifo_fname, O_WRONLY);
-                        printf("Abri o Fifo do cliente \n");
-
-                        /* ======================= ENVIAR RESPOSTA AO CLIENTE ======================= */
-                        printf("b.cheio -> %d\n",b.cheio);
-                        n = write(fd_cliente_fifo, &b, sizeof(balcao));
-                        if (n == -1) {
-                            printf("\nNão conseguiu escrever...");
-                            exit(1);
-                        }
-
-                        close(fd_cliente_fifo);
-                        clientes[nClientes] = b;
-                        nClientes++;
-                        printf("STRUCT B PID: %d\n",b.id_utente);
-                        printf("DEBUG -> PID: %d\n",clientes[0].id_utente);
-                        printf("\nN. clientes: %d\n", nClientes);
-                        printf("Enviei %d  bytes ao utente...\n", n);
-
-                    }else {
-                        printf("cli-> %d",nClientes);
-                        b.cheio = 0;
-                        strcpy(b.msg,"O balcão não consegue atender mais clientes");
-                        sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
-                        fd_cliente_fifo = open(c_fifo_fname, O_WRONLY);
-                        n_write = write(fd_cliente_fifo, &b, sizeof(balcao));
-
-                        if (n_write == -1) {
-                            printf("\nNão consegui escrever no FIFO do cliente\n");
-                            exit(1);
-                        }
-                        close(fd_cliente_fifo);
-                        continue;
                     }
                 } else {
-                    if (nMedicos <= MaxMedicos -1 ) {
-                        b.registo = 1;
-                        b.cheio=1;
-
-                        if(b.registo == 1){
-                            if(strcmp(b.msg,"sair") == 0){
-                                printf("O especialista [%d] terminou a ligação\n",b.id_medico);
-                                continue;
-                            }
-                        }
-                        strcpy(b.msg, "Esta ligado ao balcao!");
-                        sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                        fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                        n_write = write(fd_cliente_fifo, &b, sizeof(balcao));
-                        if (n_write == -1) {
-                            printf("\nNão conseguiu escrever...");
-                            exit(1);
-                        }
-                        close(fd_cliente_fifo);
-                        medicos[nMedicos] = b;
-                        nMedicos++;
-                        printf("\nN. medicos: %d\n", nMedicos);
-                        printf("Novo especialista [%d] para a especialidade [%s]\n", b.id_medico, b.especialidade);
-
-                        if(strcmp(b.especialidade, "geral") == 0 && b.filas[0] < 5) {
-                           printf("Entrei no geral\n");
-                            /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
-                            for (int i = 0; i < nClientes; i++) {
-                                if (strcmp(clientes[i].classificao,b.especialidade) == 0) {
-                                    printf("Há cliente para essa especialidade\n");
-                                    clientes[i].registo = 2;
-                                    strcpy(clientes[i].msg, "Esta ligado ao balcao!");
-
-                                    /* ======================= ABRIR FIFO DO MEDICO ======================= */
-                                    sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                                    fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                                    printf("Abri o Fifo do medico \n");
-
-                                    n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
-
-                                    if (n == -1) {
-                                        printf("\nNão conseguiu escrever...");
-                                        exit(1);
-                                    }
-                                    close(fd_cliente_fifo);
-                                    printf("Enviei %d  bytes...\n", n);
-                                }
-                            }
-                            b.filas[0]++;
-                        }
-
-                       else if(strcmp(b.especialidade,  "ortopedia") == 0 && b.filas[1] < 5) {
-                            printf("Entrei na ortopedia\n");
-                            /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
-                            for (int i = 0; i < nClientes; i++) {
-                                if (strcmp(clientes[i].classificao,b.especialidade) == 0) {
-                                    printf("Há cliente para essa especialidade\n");
-                                    clientes[i].registo = 2;
-                                    strcpy(clientes[i].msg, "Esta ligado ao balcao!");
-
-                                    /* ======================= ABRIR FIFO DO MEDICO ======================= */
-                                    sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                                    fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                                    printf("Abri o Fifo do medico \n");
-
-                                    n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
-
-                                    if (n == -1) {
-                                        printf("\nNão conseguiu escrever...");
-                                        exit(1);
-                                    }
-                                    close(fd_cliente_fifo);
-                                    printf("Enviei %d  bytes...\n", n);
-                                }
-                            }
-                            b.filas[1]++;
-                        }
-                       else if(strcmp(b.especialidade, "estamatologia") == 0 && b.filas[2] < 5) {
-                            printf("Entrei na estamatologia\n");
-                            /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
-                            for (int i = 0; i < nClientes; i++) {
-                                if (strcmp(clientes[i].classificao,b.especialidade) == 0) {
-                                    printf("Há cliente para essa especialidade\n");
-                                    clientes[i].registo = 2;
-                                    strcpy(clientes[i].msg, "Esta ligado ao balcao!");
-
-                                    /* ======================= ABRIR FIFO DO MEDICO ======================= */
-                                    sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                                    fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                                    printf("Abri o Fifo do medico \n");
-
-                                    n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
-
-                                    if (n == -1) {
-                                        printf("\nNão conseguiu escrever...");
-                                        exit(1);
-                                    }
-                                    close(fd_cliente_fifo);
-                                    printf("Enviei %d  bytes...\n", n);
-                                }
-                            }
-                            b.filas[2]++;
-                        }
-                       else if(strcmp(b.especialidade,"neurologia") == 0 && b.filas[3] < 5) {
-                            printf("Entrei na neurologia\n");
-                            /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
-                            for (int i = 0; i < nClientes; i++) {
-                                if (strcmp(clientes[i].classificao,b.especialidade) == 0) {
-                                    printf("Há cliente para essa especialidade\n");
-                                    clientes[i].registo = 2;
-                                    strcpy(clientes[i].msg, "Esta ligado ao balcao!");
-
-                                    /* ======================= ABRIR FIFO DO MEDICO ======================= */
-                                    sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                                    fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                                    printf("Abri o Fifo do medico \n");
-
-                                    n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
-
-                                    if (n == -1) {
-                                        printf("\nNão conseguiu escrever...");
-                                        exit(1);
-                                    }
-                                    close(fd_cliente_fifo);
-                                    printf("Enviei %d  bytes...\n", n);
-                                }
-                            }
-                            b.filas[3]++;
-                        }
-                       else if(strcmp(b.especialidade, "oftalmologia") == 0 && b.filas[4] < 5) {
-                            printf("Entrei na oftalmologia\n");
-                            /* ======================= PERCORRER ARRAY DOS CLIENTES ======================= */
-                            for (int i = 0; i < nClientes; i++) {
-                                if (strcmp(clientes[i].classificao,b.especialidade) == 0) {
-                                    printf("Há cliente para essa especialidade\n");
-                                    clientes[i].registo = 2;
-                                    strcpy(clientes[i].msg, "Esta ligado ao balcao!");
-
-                                    /* ======================= ABRIR FIFO DO MEDICO ======================= */
-                                    sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                                    fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                                    printf("Abri o Fifo do medico \n");
-
-                                    n = write(fd_cliente_fifo, &clientes[i], sizeof(balcao));
-
-                                    if (n == -1) {
-                                        printf("\nNão conseguiu escrever...");
-                                        exit(1);
-                                    }
-                                    close(fd_cliente_fifo);
-                                    printf("Enviei %d  bytes...\n", n);
-                                }
-                            }
-                            b.filas[4]++;
-                        }
-                       else {
-                           /* ======================= ENVIAR PARA MEDICO QUE NAO HÁ UTENTES PARA ESSA ESPECIALIDADE ======================= */
-                           b.registo = -1;
-                           strcpy(b.msg,"Não há utentes para essa especialdiade");
-                           /* ======================= ABRIR FIFO DO MEDICO ======================= */
-                           sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                            fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                           printf("Abri o Fifo do medico \n");
-                           n = write(fd_cliente_fifo, &b, sizeof(balcao));
-
-                            if(n == -1){
-                               printf("Não consegui escrever par o FIFO do médico\n");
-                               exit(1);
-                           }
-                           close(fd_cliente_fifo);
-                           printf("Enviei %d  bytes...\n", n);
-                       }
-                    } else {
-                        /* ======================= ENVIAR PARA MEDICO QUE NAO E POSSIVEL REGISTAR ======================= */
-                        b.registo = 0;
-                        b.cheio = 0;
-
-                        sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
-                        fd_cliente_fifo = open(m_fifo_fname, O_WRONLY);
-                        n_write = write(fd_cliente_fifo, &b, sizeof(balcao));
-                        if (n_write == -1) {
-                            printf("\nNão consegui escrever no FIFO do médico...\n");
-                            exit(1);
-                        }
-                        close(fd_cliente_fifo);
-                        printf("Enviei %d  bytes...\n", n);
-                        continue;
-                    }
+                    perror("[Erro] na receção de dados");
+                    encerra();
                 }
-            } else {
-                perror("[Erro] na receção de dados");
-                encerra();
+            }
+            if (FD_ISSET(fd_sinal, &fds)) {
+
+            }
+        }
+        int i;
+        if( i == 0){
+            if(t.ite_cli != 0 && t.ite_med != 0){
+                t.p_cli[0].id_medico = t.p_med[0].id_medico;
+                t.p_cli[0].consulta = 1;
+                t.p_med[0].consulta = 1;
+                t.p_cli[0].cliente = 0;
+                printf("\ncli: %d\tmed: %d\tmed_passado: %d\n", t.p_cli[0].id_utente, t.p_med[0].id_medico, t.p_cli[0].id_medico);
+
+                fd_cliente_fifo = open(c_fifo_fname, O_WRONLY);
+                n_write = write(fd_cliente_fifo, &t.p_cli[0], sizeof(balcao));
+                if(n_write == -1){
+                    printf("\nNao conseguiu mandar a informação para o cliente...");
+                    close(fd_cliente_fifo);
+                    break;
+                }
+                close(fd_cliente_fifo);
+                ++i;
             }
         }
     }while(strcmp(str_com, "sair\n") != 0);
     close(fd_server_fifo);
     unlink(bal_FIFO);
+
+    close(fd_sinal);
+    unlink(FIFO_SINAL);
+
+    b.sair = 1;
+    pthread_kill(tid, SIGUSR2);
+    pthread_join(tid, NULL);
     return 0;
 
 }

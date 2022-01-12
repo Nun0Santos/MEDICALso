@@ -1,17 +1,35 @@
 #include "utilis.h"
 #include "func_balcao.h"
 
+void acorda(int s, siginfo_t *info, void* uc){}
+
+void *temporizador(void *dados){
+    char cmd[100];
+    int fd;
+
+    balcao *td = (balcao *) dados;
+    do{
+        sleep(20);
+        fd = open(FIFO_SINAL, O_WRONLY);
+        td->cliente = 0;
+        write(fd, td, sizeof(balcao));
+        close(fd);
+
+    }while(td->sair == 0);
+    pthread_exit(NULL);
+}
+
+
 int main(int argc, char *argv[]) {
-    char m_fifo_fname[25],c_fifo_fname[25], comando[30],resposta[30],str_com[30];
-    int fd_server_fifo, fd_cliente_fifo,fd_medico_fifo,res,n,tam;
+    char m_fifo_fname[25],c_fifo_fname[25], comando[30];
+    int fd_server_fifo, fd_cliente_fifo,res,n,fd_novo;
     fd_set fds;
+    pthread_t tid;
     struct timeval tempo;
-
-
     int estado = 0; // 0 -> Nao registado | 1 -> Registado | 2 -> estou em consulta
 
     balcao b;
-    b.cliente = 0;
+
     char *especialidade[5] = {"geral","ortopedia","estomatologia","neurologia","oftalmologia"};
 
     /* ======================= VERIFICAR SE O BALCAO ESTA A CORRER ======================= */
@@ -24,6 +42,9 @@ int main(int argc, char *argv[]) {
         perror("[ERRO] Faltam argumentos!\n");
         exit(1);
     }
+    b.cliente = 0;
+    b.consulta = 0;
+    b.sair = 0;
     strcpy(b.nome_medico, argv[1]);
     strcpy(b.especialidade, argv[2]);
     //printf("%s\n",b.especialidade);
@@ -70,14 +91,15 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     printf("Enviei ao balcao %d bytes ...\n", n);
-
+    pthread_create(&tid, NULL, temporizador, (void* ) &b);
     do{
-        printf("-->\n");
+        printf("Estado: %d\n",estado);
         /* ======================= SELECT ======================= */
         /* ======================= PREPARAR DESCRITORES QUE QUERO MONOTORIZAR ============== */
+
         FD_ZERO(&fds); //LIMPAR DESCRITORES
         FD_SET(0,&fds); // TECLADO
-        FD_SET(fd_cliente_fifo,&fds); // fifo do medico(leitura)
+        FD_SET(fd_cliente_fifo,&fds);
         tempo.tv_sec = 8; // TIMEOUT
         tempo.tv_usec = 0;
 
@@ -85,56 +107,40 @@ int main(int argc, char *argv[]) {
         if(res == 0){
            //printf("\nEstou sem fazer nada...\n");
         }
-        else if(res > 0 && FD_ISSET(0,&fds)){
-            if(estado == 0){ //Nao registado //avisar o utilizador que nao pode fazer nada enquanto  nao chegar confirmacao de registo
-                printf("Não estou registado\n");
-                break;
-            }
-            else if(estado == 1){ //Registado //enviar comando para o balcao(se nao estiver numa consulta)
-                scanf("%s",comando);
-                strcpy(b.msg,comando);
-
-                n = write(fd_server_fifo, &b, sizeof(balcao));
-                if (n == -1) {
-                    printf("\nNão conseguiu escrever no FIFO do servidor...\n");
-                    exit(1);
-                }
-                if(strcmp(comando,"sair") == 0){
-                    break;
-                }
-
-            }
-            else if(estado == 2){ // Em consulta //enviar comando para cliente (se estiver numa consulta) abrir fifo cliente
+        else if(res > 0){
+            if(FD_ISSET(0,&fds)){
                 fgets(b.msg,sizeof(b.msg),stdin);
 
-
-                /* ======================= ABRIR FIFO DO CLIENTE ======================= */
-                sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
-                fd_cliente_fifo = open(c_fifo_fname, O_RDWR);
-                printf("Abri o Fifo do cliente\n");
-
-                /* ======================= ENVIAR AO CLIENTE ======================= */
-                b.id_medico=getpid();
-                n = write(fd_cliente_fifo, &b, sizeof(balcao)); //fd not name
-                if (n == -1) {
-                    perror("Erro na escrita do FIFO: ");
-                    printf("\nNão conseguiu escrever no FIFO do cliente...\n");
-                    exit(1);
+                if(estado == 1){ //Registado //enviar comando para o balcao(se nao estiver numa consulta)
+                    b.cliente = 0;
+                    b.registo_medico == 1;
+                    n = write(fd_server_fifo, &b, sizeof(balcao));
+                    if (n == -1) {
+                        printf("\nNão conseguiu escrever no FIFO do servidor...\n");
+                        exit(1);
+                    }
+                    close(fd_server_fifo);
+                    if(strcmp(b.msg,"sair") == 0){
+                        break;
+                    }
+                }else{
+                    /* ======================= ABRIR FIFO DO CLIENTE ======================= */
+                    sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
+                    b.cliente = 0;
+                    fd_novo = open(c_fifo_fname, O_RDWR);
+                    printf("Abri o Fifo do cliente\n");
+                    /* ======================= ENVIAR AO CLIENTE ======================= */
+                    b.id_medico=getpid();
+                    n = write(fd_novo, &b, sizeof(balcao));
+                    if (n == -1) {
+                        perror("\nNão conseguiu escrever no FIFO do cliente...\n");
+                        exit(1);
+                    }
+                    close(fd_novo);
+                    printf("Enviei %d  bytes...\n", n);
                 }
-                close(fd_cliente_fifo);
-                printf("Enviei %d  bytes...\n", n);
-                /* ======================= LER DO CLIENTE (MEU FIFO)======================= */
-                fd_cliente_fifo = open(m_fifo_fname, O_RDWR);
-                tam = read(fd_cliente_fifo, &b, sizeof(balcao));
-                if (tam == -1) {
-                    perror("Erro: ");
-                    printf("\nNão conseguiu ler do meu FIFO...");
-                    exit(1);
-                }
-                printf("Resposta do utente [%d] : %s\n",b.id_utente,b.msg);
-            }
         }
-        else if(res > 0 && FD_ISSET(fd_cliente_fifo,&fds)){
+        if(FD_ISSET(fd_cliente_fifo,&fds)){
             n = read(fd_cliente_fifo, &b, sizeof(balcao));
             if (n == -1) {
                 printf("\nNão conseguiu ler...");
@@ -142,37 +148,60 @@ int main(int argc, char *argv[]) {
             }
             printf("Recebi %d bytes de alguem ...\n",n); //balcao ou cliente
 
-           if(strcmp(b.msg,"Esta ligado ao balcao!") == 0 && b.registo == 0){ //filas cheias
+            if(b.cliente == 1){
+                estado = 2;
+                printf("\n[PID_CLI: %d] %s", b.id_utente,b.msg);
+            }
+            else{
+                estado = 1;
+                printf("Especialista [%d] foi registado\n",b.id_medico);
+
+                if (strcmp(b.msg, "O balcao nao tem capacidade para mais medicos...") == 0) {
+                    printf("%s", b.msg);
+                    strcpy(comando, "sair\n");
+                }
+                if (strcmp(b.msg, "o balcao fechou") == 0) {
+                    printf("%s", b.msg);
+                    strcpy(comando, "sair\n");
+                }
+            }
+        }
+          /* if(strcmp(b.msg,"Esta ligado ao balcao!") == 0 && b.cheio == 0){ //filas cheias (nMedicos > MaxMedicos)
                 estado = 0;
                 printf("Nao foi possivel o registo devido a filas cheias ou especialidade invalida - tente mais tarde\n");
             }
-           else if(strcmp(b.msg,"Esta ligado ao balcao!") == 0 && b.registo == 1) {
+            if(b.cliente == 0) {
                 estado = 1;
                 printf("Especialista [%d] foi registado\n",b.id_medico);
             }
-            else if(strcmp(b.msg,"Esta ligado ao balcao!") == 0 && b.registo == 2){
+            if(strcmp(b.msg,"Esta ligado ao balcao!") == 0 && b.registo_utente == 2){
                 estado = 2;
-                printf("ID UTENTE: %d\n",b.id_utente);
-                printf("NOME UTENTE %s\n",b.nome_utente);
+                b.consulta = 1;
 
                 printf("Consulta vai iniciar\n");
-                printf("Dados do Utente : ");
-                printf("PID = %d \r Nome= %s \r Sintoma = %s\n",b.id_utente,b.nome_utente,b.sintoma);
-                printf("----------------------------------------------------\n");
+                printf("Dados do Utente : \n");
+                printf("PID = %d \t Nome= %s \t Sintoma = %s\n",b.id_utente,b.nome_utente,b.sintoma);
+                printf("\n----------------------------------------------------\n");
                 printf("Pode escrever alguma coisa ao utente\n");
-                printf("ESTADO = %d\n",estado);
+           }
+            if(b.consulta == 1 && b.flagA == 2 ){
+                estado = 2;
+                printf("Resposta do utente [%d] : %s\n",b.id_utente,b.msg);
             }
-            else if(b.cheio == 0){
+            if(b.cheio == 0){
                printf("\nO balcão não consegue atender mais medicos - volte mais tarde!\n");
                exit(1);
             }
-            else if(b.registo == -1){
+            if(b.registo_medico == -1){ //Não há utentes para essa especialiade
                 printf("%s\n",b.msg);
-            }
+            }*/
         }
-    }while(strcmp(comando, "sair") != 0);
+    }while(strcmp(comando, "sair\n") != 0);
     close(fd_cliente_fifo);
+    b.sair =1;
+    pthread_join(tid, NULL);
     unlink(m_fifo_fname);
+    exit(0);
 }
 
     //1º - Só aceita executar se o balcão estiver em funcionamento;
