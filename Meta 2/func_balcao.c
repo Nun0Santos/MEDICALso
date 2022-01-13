@@ -29,8 +29,8 @@ void especialistas(balcao array_especialista[], int n_especialistas){
     }
 }
 
-balcao delutX(){
-    printf("cheguei ao delutX\n");
+balcao delutX(balcao array_utente[],int pid,int n_utentes){
+
 
 }
 balcao delespX(){
@@ -42,6 +42,9 @@ void freqN(){
     printf("Chegeui ao freqN");
 }
 void encerra(){
+
+
+    unlink("sinal");
     unlink("server_fifo");
     exit(EXIT_SUCCESS);
 }

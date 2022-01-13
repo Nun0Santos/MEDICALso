@@ -81,7 +81,6 @@ int main(int argc, char *argv[]) {
     if (n == sizeof(balcao)) {
         if (b.registo_utente == 1) {
             printf("Especialidade = [%s]  Prioridade = [%d]\n", b.classificao, b.prioridade);
-            estado = 1;
         }
     } else {
         printf("\nSem Resposta ou resposta incompreensivel [bytes lidos : %d]\n", n);
@@ -109,20 +108,24 @@ int main(int argc, char *argv[]) {
                 if (estado == 1) {
                     //se ja tiver recebido o confirmação do balcao, tudo o que for escrito é enviado para po balcao
                     b.cliente = 1;
-                    n = write(fd_server_fifo, &b, sizeof(balcao));
-                    if (n == -1) {
-                        printf("\nNão conseguiu escrever no FIFO do servidor...\n");
-                        exit(1);
-                    }
-                    close(fd_server_fifo);
-
-                    if (strcmp(b.msg, "sair") == 0) {
+                    //b.consulta = 0;
+                    if(strcmp(b.msg,"sair\n")==0){
+                        n = write(fd_server_fifo, &b, sizeof(balcao));
+                        if (n == -1) {
+                            printf("\nNão conseguiu escrever no FIFO do servidor...\n");
+                            exit(1);
+                        }
+                        close(fd_server_fifo);
                         break;
                     }
-                } else { //se estiver me consulta tudo que escrever vai ser enviado para o medico
+
+                } else{ //se estiver me consulta tudo que escrever vai ser enviado para o medico
                     /* ======================= ABRIR FIFO DO MEDICO ======================= */
                     sprintf(m_fifo_fname, MEDICO_FIFO, b.id_medico);
                     b.cliente = 1;
+                    b.consulta = 1;
+                    b.id_utente = getpid();
+
                     fd_cliente_fifo = open(m_fifo_fname, O_RDWR);
                     printf("Abri o FIFO do medico...\n");
 
@@ -133,6 +136,9 @@ int main(int argc, char *argv[]) {
                         exit(1);
                     }
                     printf("Enviei %d  bytes...\n", n);
+                    if(strcmp(b.msg,"adeus\n") == 0){
+                        break;
+                    }
                 }
             }
             if (FD_ISSET(fd_cliente_fifo, &fds)) {
@@ -141,21 +147,32 @@ int main(int argc, char *argv[]) {
                     perror("Erro ao ler do meu FIFO");
                     exit(1);
                 }
-
                 printf("Recebi %d bytes de alguém...\n", n); //balcao ou medico
 
-                if (b.cliente == 0) {
+                if (b.cliente == 0 && b.consulta == 1) {
                     estado = 2;
                     printf("Especialista [%d] : %s\n", b.id_medico, b.msg);
-                    if (strcmp(b.msg, "adeus\n") == 0) {
-                        printf("O Especialista [%d] terminou a consulta!\n", b.id_medico);
-                        strcpy(str_com, "sair\n");
-                    }
-                } else {
+                }
+                else if(b.flagB == 2 && b.cliente == 1){
+                    printf("Tens especialista para te atender ...\n");
+                    printf("\n=============================\n");
+                    printf("Dados especialista :\n"
+                           "Nome: %s \t Pid: %d \n",b.nome_medico,b.id_medico);
+                    printf("\n=============================\n");
+                    estado = 2;
+
+                }
+                else {
                     estado = 1;
                 }
                 if (b.cheio == 0) { // vem do balcao por nao poder atender mais clientes
                     printf("%s\n", b.msg);
+                    break;
+                }
+                if(b.consulta == -1){
+                    estado = 1;
+                    printf("O Especialista [%d] terminou a consulta\n",b.id_medico);
+                    printf("Vou encerrar\n");
                     break;
                 }
             }
@@ -164,6 +181,11 @@ int main(int argc, char *argv[]) {
 
         //quando o cliente encerra da sinal ao balcao
         b.sair = 1;
+        fd_server_fifo = open(bal_FIFO, O_WRONLY);
+        if(fd_server_fifo == -1){
+            printf("\nNao conseguiu abrir o FIFo do balcao...");
+            exit(1);
+        }
         n = write(fd_server_fifo, &b, sizeof(balcao));
         if (n == -1) {
             printf("\nNao conseguiu escrever no FIFO do balcao...\n");

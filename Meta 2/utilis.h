@@ -20,13 +20,13 @@ typedef struct {
     int cheio; // 1 - livre 0- cheio
     int sair;
     int temp;
+    int flagB; // 1 balcao 0 nao e balcao
     int registo_medico;
     int registo_utente; // 1 ->
-
-
+    int saiCli;
     int estado_utente; // 0 -> n esta em consulta 1-> consulta
     int estado_medico; //0 -> n esta em consulta 1-> consulta
-    int flagA,flagB,flagC; //para a segunda resposta
+    int flagA,flagC; //para a segunda resposta
     int consulta; // 0 -> não esta  1 -> está
     pthread_mutex_t *m;  // Partilhado
 
@@ -35,7 +35,7 @@ typedef struct {
 
 /*BALCAO */
 typedef struct THbalcao{
-    int continua;
+    int continua,tempo;
     int maxClientes, maxMedicos;
     balcao p_cli[5];
     balcao p_med[5];
