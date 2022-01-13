@@ -86,14 +86,13 @@ int main(int argc, char *argv[]) {
         printf("\nSem Resposta ou resposta incompreensivel [bytes lidos : %d]\n", n);
     }
     do {
-        printf("Estado: %d\n", estado);
+       // printf("Estado: %d\n", estado);
         /* ======================= SELECT ======================= */
         /* ======================= PREPARAR DESCRITORES QUE QUERO MONOTORIZAR ============== */
 
         FD_ZERO(&fds); //LIMPAR DESCRITORES
         FD_SET(0, &fds); // TECLADO
         FD_SET(fd_cliente_fifo, &fds); // FIFO cliente
-        //FD_SET(fd_c_chat, &fds);
         tempo.tv_sec = 8; // TIMEOUT
         tempo.tv_usec = 0;
 
@@ -105,6 +104,7 @@ int main(int argc, char *argv[]) {
             if (FD_ISSET(0, &fds)) { // o avisar o balcao para encerrar(sair do lado do balcao)
                 fgets(b.msg, sizeof(b.msg), stdin);
 
+                printf("\n--->%s estado->%d\n",b.msg,estado);
                 if (estado == 1) {
                     //se ja tiver recebido o confirmação do balcao, tudo o que for escrito é enviado para po balcao
                     b.cliente = 1;
@@ -126,15 +126,16 @@ int main(int argc, char *argv[]) {
                     b.consulta = 1;
                     b.id_utente = getpid();
 
-                    fd_cliente_fifo = open(m_fifo_fname, O_RDWR);
-                    printf("Abri o FIFO do medico...\n");
+                   int fd_cliente_novo= open(m_fifo_fname, O_RDWR);
+                    printf("Abri o FIFO do medico...[%d]\n",fd_cliente_novo);
 
                     /* ======================= ENVIAR AO MEDICO ======================= */
-                    n_write = write(fd_cliente_fifo, &b, sizeof(balcao));
+                    n_write = write(fd_cliente_novo, &b, sizeof(balcao));
                     if (n_write == -1) {
                         perror("Erro a escrever no FIFO do medico.... \n");
                         exit(1);
                     }
+                    close(fd_cliente_novo);
                     printf("Enviei %d  bytes...\n", n);
                     if(strcmp(b.msg,"adeus\n") == 0){
                         break;
@@ -147,6 +148,7 @@ int main(int argc, char *argv[]) {
                     perror("Erro ao ler do meu FIFO");
                     exit(1);
                 }
+                if (n == sizeof(balcao)){
                 printf("Recebi %d bytes de alguém...\n", n); //balcao ou medico
 
                 if (b.cliente == 0 && b.consulta == 1) {
@@ -176,6 +178,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
             }
+        }
         }
     }while (strcmp(b.msg, "sair\n") != 0);
 

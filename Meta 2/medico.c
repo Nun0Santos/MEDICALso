@@ -124,13 +124,14 @@ int main(int argc, char *argv[]) {
                     }
                 } else {
                     /* ======================= ABRIR FIFO DO CLIENTE ======================= */
+                    printf("entrei no estado 2\n");
                     sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
                     b.cliente = 0;
                     b.consulta = 1;
                     if(strcmp(b.msg,"adeus\n") == 0){
                         b.consulta = -1;
                         estado = 1;
-
+                        
                         n = write(fd_server_fifo,&b, sizeof(balcao));
                         if (n == -1) {
                             perror("\nNão conseguiu escrever no FIFO do servidor...\n");
