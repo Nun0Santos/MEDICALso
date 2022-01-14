@@ -164,6 +164,7 @@ int main(int argc, char *argv[]) {
                     printf("\nUtente [%d] : %s\n", b.id_utente, b.msg);
                     if(strcmp(b.msg,"adeus\n") == 0){
                         estado = 1;
+                        b.consulta = 0;
                         printf("O Utente [%d] terminou a consulta\n",b.id_utente);
                     }
 

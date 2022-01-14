@@ -25,6 +25,7 @@ typedef struct {
     pthread_mutex_t *m;  // Partilhado
 
 }balcao;
+//prioridade 1 tem mais especialidade
 
 /*BALCAO */
 typedef struct THbalcao{
