@@ -124,19 +124,19 @@ int main(int argc, char *argv[]) {
                     }
                 } else {
                     /* ======================= ABRIR FIFO DO CLIENTE ======================= */
-                    printf("entrei no estado 2\n");
                     sprintf(c_fifo_fname, CLIENT_FIFO, b.id_utente);
                     b.cliente = 0;
                     b.consulta = 1;
                     if(strcmp(b.msg,"adeus\n") == 0){
                         b.consulta = -1;
                         estado = 1;
-                        
+
                         n = write(fd_server_fifo,&b, sizeof(balcao));
                         if (n == -1) {
                             perror("\nNão conseguiu escrever no FIFO do servidor...\n");
                             exit(1);
                         }
+                        printf("b.consulta : %d",b.consulta);
                     }
                     fd_novo = open(c_fifo_fname, O_RDWR);
                     printf("Abri o Fifo do cliente\n");
@@ -162,7 +162,10 @@ int main(int argc, char *argv[]) {
                 if (b.cliente == 1 && b.consulta == 1) {
                     estado = 2;
                     printf("\nUtente [%d] : %s\n", b.id_utente, b.msg);
-
+                    if(strcmp(b.msg,"adeus\n") == 0){
+                        estado = 1;
+                        printf("O Utente [%d] terminou a consulta\n",b.id_utente);
+                    }
 
                 } else if(b.registo_medico == 1){
                     estado = 1;
@@ -176,12 +179,6 @@ int main(int argc, char *argv[]) {
                     printf("\n=============================\n");
                     estado = 2;
                 }
-                else if(b.saiCli == -1){
-                        estado = 1;
-                        printf("O Utente [%d] terminou a consulta\n",b.id_utente);
-
-                }
-
                 /*if (strcmp(b.msg, "Esta ligado ao balcao!") == 0 &&
                     b.cheio == 0) { //filas cheias (nMedicos > MaxMedicos)
                     estado = 0;

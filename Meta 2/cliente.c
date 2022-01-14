@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
         printf("\nSem Resposta ou resposta incompreensivel [bytes lidos : %d]\n", n);
     }
     do {
-       // printf("Estado: %d\n", estado);
+        printf("Estado: %d\n", estado);
         /* ======================= SELECT ======================= */
         /* ======================= PREPARAR DESCRITORES QUE QUERO MONOTORIZAR ============== */
 
@@ -104,7 +104,6 @@ int main(int argc, char *argv[]) {
             if (FD_ISSET(0, &fds)) { // o avisar o balcao para encerrar(sair do lado do balcao)
                 fgets(b.msg, sizeof(b.msg), stdin);
 
-                printf("\n--->%s estado->%d\n",b.msg,estado);
                 if (estado == 1) {
                     //se ja tiver recebido o confirmação do balcao, tudo o que for escrito é enviado para po balcao
                     b.cliente = 1;
@@ -127,7 +126,7 @@ int main(int argc, char *argv[]) {
                     b.id_utente = getpid();
 
                    int fd_cliente_novo= open(m_fifo_fname, O_RDWR);
-                    printf("Abri o FIFO do medico...[%d]\n",fd_cliente_novo);
+                    printf("Abri o FIFO do medico...\n");
 
                     /* ======================= ENVIAR AO MEDICO ======================= */
                     n_write = write(fd_cliente_novo, &b, sizeof(balcao));
