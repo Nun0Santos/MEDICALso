@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated>
+      <config projectName="Meta 2" targetName="balcao" />
+      <config projectName="Meta 2" targetName="all" />
+      <config projectName="Meta 2" targetName="medico" />
+      <config projectName="Meta 2" targetName="cliente" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="051eb78a-8933-4582-a23e-5d7a07b35124" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/func_balcao.c" beforeDir="false" afterPath="$PROJECT_DIR$/func_balcao.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/func_balcao.o" beforeDir="false" afterPath="$PROJECT_DIR$/func_balcao.o" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="clangTidyViaClangd" value="false" />
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="MakefileLocalSettings">
+    <option name="availableProjects">
+      <map>
+        <entry>
+          <key>
+            <ExternalProjectPojo>
+              <option name="name" value="Meta 2" />
+              <option name="path" value="$PROJECT_DIR$" />
+            </ExternalProjectPojo>
+          </key>
+          <value>
+            <list>
+              <ExternalProjectPojo>
+                <option name="name" value="Meta 2" />
+                <option name="path" value="$PROJECT_DIR$" />
+              </ExternalProjectPojo>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="projectSyncType">
+      <map>
+        <entry key="$PROJECT_DIR$" value="RE_IMPORT" />
+      </map>
+    </option>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="21MUZiz4evFJzVh6nkH0lP7YKrP" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="RunOnceActivity.cidr.known.project.marker" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="cidr.known.project.marker" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="MakefileSettings" />
+  </component>
+  <component name="RunManager" selected="Makefile Application.all">
+    <configuration name="all" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Meta 2" TARGET_NAME="all" CONFIG_NAME="all" version="1">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="balcao" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Meta 2" TARGET_NAME="balcao" CONFIG_NAME="balcao" version="1">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cliente" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Meta 2" TARGET_NAME="cliente" CONFIG_NAME="cliente" version="1">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="medico" type="CLionNativeAppRunConfigurationType" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Meta 2" TARGET_NAME="medico" CONFIG_NAME="medico" version="1">
+      <method v="2">
+        <option name="CLION.COMPOUND.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Makefile Application.all" />
+      <item itemvalue="Makefile Application.balcao" />
+      <item itemvalue="Makefile Application.cliente" />
+      <item itemvalue="Makefile Application.medico" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="051eb78a-8933-4582-a23e-5d7a07b35124" name="Changes" comment="" />
+      <created>1637750507677</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1637750507677</updated>
+      <workItem from="1637750508880" duration="859000" />
+      <workItem from="1637752526609" duration="2146000" />
+      <workItem from="1637840672857" duration="1529000" />
+      <workItem from="1637875050770" duration="1254000" />
+      <workItem from="1637876324069" duration="18000" />
+      <workItem from="1637876371022" duration="23000" />
+      <workItem from="1638488407812" duration="66000" />
+      <workItem from="1638576763413" duration="154000" />
+      <workItem from="1638616506360" duration="7147000" />
+      <workItem from="1638705461565" duration="1704000" />
+      <workItem from="1638710363245" duration="5000" />
+      <workItem from="1638745689043" duration="14000" />
+      <workItem from="1638748208054" duration="81000" />
+      <workItem from="1638871958702" duration="977000" />
+      <workItem from="1638887461937" duration="878000" />
+      <workItem from="1638896770151" duration="26000" />
+      <workItem from="1639049418385" duration="377000" />
+      <workItem from="1639071606224" duration="6545000" />
+      <workItem from="1639078625007" duration="1000" />
+      <workItem from="1639088578753" duration="2774000" />
+      <workItem from="1639136590815" duration="48000" />
+      <workItem from="1639146804477" duration="1170000" />
+      <workItem from="1639222084367" duration="222000" />
+      <workItem from="1639222323254" duration="145000" />
+      <workItem from="1639353905543" duration="1918000" />
+      <workItem from="1639434502683" duration="1208000" />
+      <workItem from="1639471019231" duration="3748000" />
+      <workItem from="1639478099936" duration="6000" />
+      <workItem from="1639525268049" duration="3027000" />
+      <workItem from="1639566977333" duration="743000" />
+      <workItem from="1639579136709" duration="4000" />
+      <workItem from="1639594936996" duration="103000" />
+      <workItem from="1639595230961" duration="10000" />
+      <workItem from="1639596692012" duration="13000" />
+      <workItem from="1639613852731" duration="34000" />
+      <workItem from="1639658989569" duration="177000" />
+      <workItem from="1639676677427" duration="4041000" />
+      <workItem from="1639688539087" duration="4798000" />
+      <workItem from="1639697337341" duration="25000" />
+      <workItem from="1639744692505" duration="122000" />
+      <workItem from="1640036448732" duration="29000" />
+      <workItem from="1640076826573" duration="76000" />
+      <workItem from="1640094841983" duration="635000" />
+      <workItem from="1640100013720" duration="1023000" />
+      <workItem from="1640106761870" duration="19205000" />
+      <workItem from="1640163095097" duration="39000" />
+      <workItem from="1640259498116" duration="2989000" />
+      <workItem from="1640283443759" duration="9000" />
+      <workItem from="1640283561844" duration="1530000" />
+      <workItem from="1640384944028" duration="4510000" />
+      <workItem from="1640634376679" duration="6000" />
+      <workItem from="1640636450948" duration="62000" />
+      <workItem from="1640636632873" duration="12000" />
+      <workItem from="1640724962978" duration="7885000" />
+      <workItem from="1640817900266" duration="8000" />
+      <workItem from="1640823268580" duration="768000" />
+      <workItem from="1640824129948" duration="8000" />
+      <workItem from="1641207161451" duration="15647000" />
+      <workItem from="1641250100566" duration="4000" />
+      <workItem from="1641252260169" duration="105000" />
+      <workItem from="1641288255984" duration="22966000" />
+      <workItem from="1641335486785" duration="6000" />
+      <workItem from="1641336857253" duration="892000" />
+      <workItem from="1641380009844" duration="24000" />
+      <workItem from="1641380128422" duration="181000" />
+      <workItem from="1641388262919" duration="20000" />
+      <workItem from="1641408106180" duration="4660000" />
+      <workItem from="1641469764118" duration="90000" />
+      <workItem from="1641470504693" duration="7064000" />
+      <workItem from="1641491008268" duration="9034000" />
+      <workItem from="1641510301744" duration="56000" />
+      <workItem from="1641554963399" duration="11691000" />
+      <workItem from="1641595468991" duration="4592000" />
+      <workItem from="1641633110747" duration="1685000" />
+      <workItem from="1641634808641" duration="15000" />
+      <workItem from="1641742568220" duration="1000" />
+      <workItem from="1641816698348" duration="4000" />
+      <workItem from="1641818849298" duration="2796000" />
+      <workItem from="1641852459897" duration="3000" />
+      <workItem from="1641890407614" duration="27282000" />
+      <workItem from="1641950545028" duration="6625000" />
+      <workItem from="1641975914348" duration="273000" />
+      <workItem from="1641977784483" duration="11964000" />
+      <workItem from="1642011269676" duration="4840000" />
+      <workItem from="1642030238688" duration="8571000" />
+      <workItem from="1642039539980" duration="28000" />
+      <workItem from="1642073768109" duration="322000" />
+      <workItem from="1642085831673" duration="3633000" />
+      <workItem from="1642098128823" duration="153000" />
+      <workItem from="1642110846042" duration="13583000" />
+      <workItem from="1642126913057" duration="1004000" />
+      <workItem from="1642128644673" duration="13000" />
+      <workItem from="1642152672829" duration="11000" />
+      <workItem from="1642159463320" duration="1000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/func_balcao.c</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/medico.c</url>
+          <line>163</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

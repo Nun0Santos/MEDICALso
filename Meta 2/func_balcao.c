@@ -34,10 +34,7 @@ balcao delutX(balcao array_utente[],int pid,int n_utentes){
     for(int i = 0; i<n_utentes; i++){
         printf("[%d]PID: %d\n",i,array_utente[i].id_utente);
     }
-
     for(int i=0; i<n_utentes-1; i++){
-        printf("var PID %d\n",pid);
-        printf("arr PID %d\n",array_utente[i].id_utente);
             if(pid == array_utente[i].id_utente){
                 for(int j = i; j< n_utentes-1; j++){
                     array_utente[j] = array_utente[j+1];
