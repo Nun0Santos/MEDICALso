@@ -3,16 +3,17 @@
 #include "func_balcao.h"
 
 int main(int argc, char *argv[]) {
-    int fd_server_fifo, fd_cliente_fifo, n, res, n_write, fd_c_chat; // file descriptors para os FIFOS
+    int fd_server_fifo, fd_cliente_fifo, n, res, n_write;
     char c_fifo_fname[25]; /* Nome do FIFO deste cliente */
     char m_fifo_fname[25]; /* Nome do FIFO deste medico */
-    char comando[30], str_com[30];
+    char  str_com[30];
+
     int estado; //0 -> n esta em consulta 1-> consulta
+
     fd_set fds;
     struct timeval tempo;
 
     balcao b;
-    b.cliente = 1;
 
     /* ======================= VERIFICAR SE O BALCAO ESTA A CORRER ======================= */
 
@@ -93,7 +94,7 @@ int main(int argc, char *argv[]) {
         FD_ZERO(&fds); //LIMPAR DESCRITORES
         FD_SET(0, &fds); // TECLADO
         FD_SET(fd_cliente_fifo, &fds); // FIFO cliente
-        tempo.tv_sec = 8; // TIMEOUT
+        tempo.tv_sec = 10; // TIMEOUT
         tempo.tv_usec = 0;
 
         res = select(fd_cliente_fifo + 1, &fds, NULL, NULL, &tempo);
@@ -163,10 +164,10 @@ int main(int argc, char *argv[]) {
                     estado = 2;
 
                 }
-                else {
+                /*else {
                     estado = 1;
-                }
-                if (b.cheio == 0) { // vem do balcao por nao poder atender mais clientes
+                }*/
+                if (b.cheio == 0 && b.flagN == -1 ) { // vem do balcao por nao poder atender mais clientes
                     printf("%s\n", b.msg);
                     break;
                 }
@@ -175,6 +176,10 @@ int main(int argc, char *argv[]) {
                     printf("O Especialista [%d] terminou a consulta\n",b.id_medico);
                     printf("Vou encerrar\n");
                     break;
+                }
+                if(b.flagOcupado == 1 && b.consulta ==0){
+                    printf("%s",b.msg);
+                    estado = 1;
                 }
             }
         }
@@ -200,22 +205,6 @@ int main(int argc, char *argv[]) {
         exit(0);
 
 }
-
-
-
-
-    //1º - Só aceita executar se o balcão estiver em funcionamento : (Enviar um sinal para o balca para ver se está a correr ?)
-
-
-    //1.2º - Enviar sintomas ao balcao
-
-
-    //2º - Obter do balcao: area de especialidade, prioridade, numero de utentes nesse instante à frente dele nessa especialidade, numero de especialista dessa area
-
-
-    //3º - Aguardar que seja encaminhado para um especialista (programa medico)
-
-    //4º - Diálogo com o especialista (programa médico)
 
 
 

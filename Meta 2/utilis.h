@@ -22,6 +22,7 @@ typedef struct {
     int flagB; // 1 balcao 0 nao e balcao
     int med_ocupado,cli_ocupado; // 0-> esta | 1-> n esta
     int flagG,flagO,flagN,flagE,flagOF; //flagG -> geral | flagO->Ortopedia | flagN->Neurologia | flagE->Estomatologia | flagOF->oftalmologia
+    int flagOcupado;
     pthread_mutex_t *m;  // Partilhado
 
 }balcao;
@@ -29,12 +30,13 @@ typedef struct {
 
 /*BALCAO */
 typedef struct THbalcao{
-    int continua,tempo;
+    int continua;
     int maxClientes, maxMedicos;
     balcao p_cli[5];
     balcao p_med[5];
     int ite_cli , ite_med;//"iteradores"
-    pthread_mutex_t *m;  // Partilhado
+    pthread_mutex_t *trinco; //mutex
+    int tempo; //Tempo para mostrar a lista
 
 }thbalcao;
 
