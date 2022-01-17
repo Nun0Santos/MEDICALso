@@ -55,16 +55,16 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     };
     printf("Abri o fifo do cliente...\n");
-    printf("PID [%d] Olá %s\n", b.id_utente, b.nome_utente);
+    printf("\nPID [%d] Olá %s\n", b.id_utente, b.nome_utente);
 
     /* =======================  OBTEM SINTOMA DO UTENTE ======================= */
     b.cliente = 1;
-    //b.id_medico = 0;
+    b.id_medico = 0;
     b.consulta = 0;
     b.sair = 0;
 
     printf("\nSintoma: ");
-    fgets(b.sintoma, SINTOMA_MAX, stdin);
+    fgets(b.sintoma, sizeof(b.sintoma), stdin);
 
     /* ======================= ENVIA SINTOMA AO BALCAO ======================= */
     n = write(fd_server_fifo, &b, sizeof(balcao));
@@ -91,10 +91,10 @@ int main(int argc, char *argv[]) {
         /* ======================= SELECT ======================= */
         /* ======================= PREPARAR DESCRITORES QUE QUERO MONOTORIZAR ============== */
 
-        FD_ZERO(&fds); //LIMPAR DESCRITORES
-        FD_SET(0, &fds); // TECLADO
-        FD_SET(fd_cliente_fifo, &fds); // FIFO cliente
-        tempo.tv_sec = 10; // TIMEOUT
+        FD_ZERO(&fds);
+        FD_SET(0, &fds);
+        FD_SET(fd_cliente_fifo, &fds);
+        tempo.tv_sec = 10;
         tempo.tv_usec = 0;
 
         res = select(fd_cliente_fifo + 1, &fds, NULL, NULL, &tempo);
@@ -103,20 +103,22 @@ int main(int argc, char *argv[]) {
 
         } else if (res > 0) {
             if (FD_ISSET(0, &fds)) { // o avisar o balcao para encerrar(sair do lado do balcao)
-                fgets(b.msg, sizeof(b.msg), stdin);
+                fgets(str_com, sizeof(str_com), stdin);
+
+                strcpy(b.msg, str_com);
 
                 if (estado == 1) {
                     //se ja tiver recebido o confirmação do balcao, tudo o que for escrito é enviado para po balcao
                     b.cliente = 1;
-                    //b.consulta = 0;
-                    if(strcmp(b.msg,"sair\n")==0){
-                        n = write(fd_server_fifo, &b, sizeof(balcao));
+
+                   if(strcmp(str_com,"sair\n")==0){
+                       n = write(fd_server_fifo, &b, sizeof(balcao));
                         if (n == -1) {
                             printf("\nNão conseguiu escrever no FIFO do servidor...\n");
                             exit(1);
                         }
                         close(fd_server_fifo);
-                        break;
+                        strcpy(str_com,"sair\n");
                     }
 
                 } else{ //se estiver me consulta tudo que escrever vai ser enviado para o medico
@@ -138,7 +140,7 @@ int main(int argc, char *argv[]) {
                     close(fd_cliente_novo);
                     printf("Enviei %d  bytes...\n", n);
                     if(strcmp(b.msg,"adeus\n") == 0){
-                        break;
+                        strcpy(str_com,"sair\n");
                     }
                 }
             }
@@ -154,6 +156,7 @@ int main(int argc, char *argv[]) {
                 if (b.cliente == 0 && b.consulta == 1) {
                     estado = 2;
                     printf("Especialista [%d] : %s\n", b.id_medico, b.msg);
+
                 }
                 else if(b.flagB == 2 && b.cliente == 1){
                     printf("Tens especialista para te atender ...\n");
@@ -164,31 +167,42 @@ int main(int argc, char *argv[]) {
                     estado = 2;
 
                 }
-                /*else {
+                else {
                     estado = 1;
-                }*/
+                }
                 if (b.cheio == 0 && b.flagN == -1 ) { // vem do balcao por nao poder atender mais clientes
                     printf("%s\n", b.msg);
-                    break;
+                    strcpy(str_com,"sair\n");
                 }
                 if(b.consulta == -1){
                     estado = 1;
                     printf("O Especialista [%d] terminou a consulta\n",b.id_medico);
                     printf("Vou encerrar\n");
-                    break;
+                    strcpy(str_com,"sair\n");
                 }
                 if(b.flagOcupado == 1 && b.consulta ==0){
                     printf("%s",b.msg);
                     estado = 1;
                 }
+                if(b.remove == 1){
+                        printf("\nNao te quero aqui - Adeus...\n");
+                        strcpy(str_com,"sair\n");
+
+                }
+                if(b.cliente == 1 && b.encerra == 1){
+                    printf("\nOrdem do balcao para encerrar\n");
+                    strcpy(str_com,"sair\n");
+                }
             }
         }
         }
-    }while (strcmp(b.msg, "sair\n") != 0);
+    }while (strcmp(str_com, "sair\n") != 0);
 
         //quando o cliente encerra da sinal ao balcao
         b.sair = 1;
-        fd_server_fifo = open(bal_FIFO, O_WRONLY);
+        b.cliente = 1;
+        b.consulta = 0;
+        fd_server_fifo = open(FIFO_SINAL, O_WRONLY);
         if(fd_server_fifo == -1){
             printf("\nNao conseguiu abrir o FIFo do balcao...");
             exit(1);

@@ -7,26 +7,25 @@
 
 
 // ESTRUTAR QUE MEDICO E UTENTE ENVIAM PARA O BALCAO
+
 typedef struct {
-    char nome_utente[NOME_MAX], nome_medico[NOME_MAX];
+    char nome_utente[NOME_MAX], nome_medico[NOME_MAX],msg[256];
     char sintoma[SINTOMA_MAX];
     char especialidade[ESPECIALIDADE_MAX];
     char classificao[ESPECIALIDADE_MAX];
     int filas[MAX_FILAS],prioridade,sair,temp;
     pid_t id_utente, id_medico; //PID do processo
-    char msg[256];
+    int remove,encerra,flagOcupado,flagN;
     int  cliente; //Saber se e cliente ou medico | 1 -> Cliente | 0 -> Medico
     int cheio; // 1 - livre 0- cheio
     int registo_medico,registo_utente;
     int consulta; // 0 -> não esta  1 -> está
     int flagB; // 1 balcao 0 nao e balcao
     int med_ocupado,cli_ocupado; // 0-> esta | 1-> n esta
-    int flagG,flagO,flagN,flagE,flagOF; //flagG -> geral | flagO->Ortopedia | flagN->Neurologia | flagE->Estomatologia | flagOF->oftalmologia
-    int flagOcupado;
-    pthread_mutex_t *m;  // Partilhado
+    pthread_mutex_t *trinco;  // Partilhado
 
 }balcao;
-//prioridade 1 tem mais especialidade
+
 
 /*BALCAO */
 typedef struct THbalcao{
