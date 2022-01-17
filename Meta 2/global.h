@@ -1,6 +1,4 @@
-//
-// Created by user on 16/12/21.
-//
+
 
 #ifndef META_2_GLOBAL_H
 #define META_2_GLOBAL_H

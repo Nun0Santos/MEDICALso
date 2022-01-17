@@ -1,6 +1,5 @@
-
 #include "utilis.h"
-#include "func_balcao.h"
+
 
 int main(int argc, char *argv[]) {
     int fd_server_fifo, fd_cliente_fifo, n, res, n_write;

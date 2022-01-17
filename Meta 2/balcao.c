@@ -1,7 +1,3 @@
-//
-// Created by user on 07/11/21.
-//
-#include "func_balcao.h"
 #include "utilis.h"
 
 void acorda(int s, siginfo_t *info, void* uc){}
@@ -143,7 +139,6 @@ int main() {
         t.maxClientes = MaxClientes;
     } else {
         printf("Erro ao ler MAXCLIENTES\n");
-        encerra();
         return -1;
     }
     printf("\nMAXCLIENTE = %d\n", MaxClientes);
@@ -154,7 +149,6 @@ int main() {
         t.maxMedicos = MaxMedicos;
     } else {
         printf("Erro ao ler MaxMedicos\n");
-        encerra();
         return -1;
     }
     printf("MAXMEDICOS = %d\n", MaxMedicos);

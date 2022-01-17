@@ -1,6 +1,3 @@
-//
-// Created by user on 03/11/21.
-//
 #ifndef TP_UTILIS_H
 #define TP_UTILIS_H
 #include "global.h"

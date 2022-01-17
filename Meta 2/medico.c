@@ -1,7 +1,5 @@
 #include "utilis.h"
 
-#include "func_balcao.h"
-
 void acorda(int s, siginfo_t *info, void *uc){}
 
 void *temporizador(void *dados){
